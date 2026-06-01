@@ -1,0 +1,41 @@
+import os
+
+from django.contrib.auth import get_user_model
+from django.core.management.base import BaseCommand
+
+User = get_user_model()
+
+
+class Command(BaseCommand):
+    help = 'Create the initial Mu2e admin user if one does not already exist'
+
+    def handle(self, *args, **options):
+        from allauth.account.models import EmailAddress
+
+        username = os.environ.get('MU2E_INITIAL_ADMIN_USERNAME', 'mu2e-admin')
+        email = os.environ.get('MU2E_INITIAL_ADMIN_EMAIL', 'mu2e-admin@fnal.gov')
+        password = os.environ.get('MU2E_INITIAL_ADMIN_PASSWORD', '')
+
+        if not password:
+            self.stdout.write(self.style.WARNING(
+                'MU2E_INITIAL_ADMIN_PASSWORD not set — skipping seed_admin.'
+            ))
+            return
+
+        if User.objects.filter(username=username).exists():
+            user = User.objects.get(username=username)
+            self.stdout.write(f'Admin user "{username}" already exists — skipping.')
+        else:
+            user = User.objects.create_superuser(
+                username=username,
+                email=email,
+                password=password,
+                role=User.Role.ADMIN,
+            )
+            self.stdout.write(self.style.SUCCESS(f'Created admin user: {username} ({email})'))
+
+        EmailAddress.objects.get_or_create(
+            user=user,
+            email=user.email,
+            defaults={'primary': True, 'verified': True},
+        )

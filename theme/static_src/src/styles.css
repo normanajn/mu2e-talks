@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --mu2e-primary:       #0f766e;
+  --mu2e-primary-hover: #115e59;
+  --mu2e-accent:        #2563eb;
+  --mu2e-accent-soft:   #dbeafe;
+  --mu2e-ink:           #0f172a;
+  --mu2e-ink-soft:      #475569;
+  --mu2e-paper:         #ffffff;
+  --mu2e-paper-soft:    #f8fafc;
+  --mu2e-border:        #e2e8f0;
+}

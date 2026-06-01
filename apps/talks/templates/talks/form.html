@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}{% if object %}Edit Talk{% else %}New Talk{% endif %} | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-semibold text-slate-900">{% if object %}Edit Talk{% else %}New Talk{% endif %}</h1>
+</div>
+
+<form method="post" class="space-y-6 max-w-4xl">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+  <div class="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Talk</h2>
+    <div class="grid gap-4 md:grid-cols-2">
+      <label class="block md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">Talk Title</span>
+        {% render_field form.talk_title class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.talk_title.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Type</span>
+        {% render_field form.type class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.type.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">DocDB Number</span>
+        {% render_field form.docdb_number class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.docdb_number.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Assigned To</span>
+        {% render_field form.assigned_to class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.assigned_to.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Practice Talk Date</span>
+        {% render_field form.practice_talk_date class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.practice_talk_date.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Status</span>
+        {% render_field form.status class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.status.errors }}
+      </label>
+    </div>
+    <div class="flex flex-wrap gap-5 text-sm">
+      <label class="inline-flex items-center gap-2">{% render_field form.plenary class="rounded border-slate-300" %} Plenary</label>
+      <label class="inline-flex items-center gap-2">{% render_field form.parallel class="rounded border-slate-300" %} Parallel</label>
+      <label class="inline-flex items-center gap-2">{% render_field form.practice_talk_complete class="rounded border-slate-300" %} Practice complete</label>
+      <label class="inline-flex items-center gap-2">{% render_field form.final_approval class="rounded border-slate-300" %} Final approval</label>
+      <label class="inline-flex items-center gap-2">{% render_field form.complete_given class="rounded border-slate-300" %} Complete/Given</label>
+    </div>
+  </section>
+
+  <section class="space-y-4">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Conference</h2>
+    <label class="block">
+      <span class="text-sm font-medium text-slate-700">Existing Conference</span>
+      {% render_field form.conference class="mt-1 block w-full rounded-md border-slate-300" %}
+      {{ form.conference.errors }}
+    </label>
+    <div class="grid gap-4 md:grid-cols-2">
+      <label class="block md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">Conference Title</span>
+        {% render_field form.conference_title class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.conference_title.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">Start Date</span>
+        {% render_field form.conference_start_date class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.conference_start_date.errors }}
+      </label>
+      <label class="block">
+        <span class="text-sm font-medium text-slate-700">End Date</span>
+        {% render_field form.conference_end_date class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.conference_end_date.errors }}
+      </label>
+      <label class="block md:col-span-2">
+        <span class="text-sm font-medium text-slate-700">Conference URL</span>
+        {% render_field form.conference_url class="mt-1 block w-full rounded-md border-slate-300" %}
+        {{ form.conference_url.errors }}
+      </label>
+    </div>
+  </section>
+
+  <section>
+    <label class="block">
+      <span class="text-sm font-medium text-slate-700">Comments</span>
+      {% render_field form.comments class="mt-1 block w-full rounded-md border-slate-300 font-mono text-sm" %}
+      {{ form.comments.errors }}
+    </label>
+  </section>
+
+  <div class="flex gap-3">
+    <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Save</button>
+    <a href="{% if object %}{% url 'talks:detail' object.pk %}{% else %}{% url 'talks:list' %}{% endif %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Cancel</a>
+  </div>
+</form>
+{% endblock %}

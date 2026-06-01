@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Edit Institution | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="max-w-2xl">
+  <div class="flex items-center gap-3 mb-6">
+    <a href="{% url 'institutions' %}" class="text-sm text-mu2e-primary hover:underline">&larr; Institutions</a>
+    <h1 class="text-2xl font-semibold text-slate-900">Edit Institution</h1>
+  </div>
+  <form method="post" class="bg-white border border-slate-200 rounded-lg p-6 space-y-4">
+    {% csrf_token %}
+    {% for field in form %}
+      {% include "components/_form_field.html" %}
+    {% endfor %}
+    <div class="flex gap-3 pt-2">
+      <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Save changes</button>
+      <a href="{% url 'institutions' %}" class="text-sm text-slate-500 self-center hover:underline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+# Default values for mu2e-talks-simple.
+# Override with:  helm install ... -f my-values.yaml  or  --set key=value
+
+image:
+  repository: docker.io/normanajn/mu2e-talks-web
+  tag: latest
+  pullPolicy: Always
+
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 8000
+
+# ── OKD Route ─────────────────────────────────────────────────────────────────
+route:
+  # Set to the public hostname to create an OKD Route with TLS edge termination.
+  # Leave empty to skip Route creation.
+  hostname: ""
+
+# ── cert-manager ───────────────────────────────────────────────────────────────
+certManager:
+  enabled: false
+  clusterIssuer: incommon-acme
+  secretName: mu2e-talks-tls
+  # Set to true only after the Certificate has been issued and the secret exists.
+  # This wires the secret into the Route and grants the OKD router RBAC access.
+  externalCertificate: false
+
+pvc:
+  sqliteData:
+    size: 1Gi
+  media:
+    size: 1Gi
+
+# ── Django core ────────────────────────────────────────────────────────────────
+django:
+  settingsModule: mu2e_talks.settings.dev
+  # REQUIRED – set in my-values.yaml, never commit a real value here
+  secretKey: ""
+  allowedHosts: "localhost,127.0.0.1"
+  emailVerification: optional   # none | optional | mandatory
+  disableLocalSignup: "0"
+  localLoginEnabled: "0"
+  initialAdminUsername: mu2e-admin
+  initialAdminEmail: mu2e-admin@fnal.gov
+  # REQUIRED – set in my-values.yaml, never commit a real value here
+  initialAdminPassword: ""
+
+# ── Database ───────────────────────────────────────────────────────────────────
+database:
+  url: "sqlite:////app/data/db.sqlite3"
+
+# ── Gunicorn ───────────────────────────────────────────────────────────────────
+gunicorn:
+  workers: 3
+  logLevel: info
+
+# ── Email (SMTP) ───────────────────────────────────────────────────────────────
+email:
+  host: ""
+  port: "587"
+  user: ""
+  password: ""
+  defaultFrom: "noreply@localhost"
+
+# ── Google OAuth (optional) ────────────────────────────────────────────────────
+github:
+  token: ""
+
+google:
+  clientId: ""
+  clientSecret: ""
+
+# ── OIDC / Fermilab SSO (optional) ────────────────────────────────────────────
+oidc:
+  providerUrl: ""
+  clientId: ""
+  clientSecret: ""

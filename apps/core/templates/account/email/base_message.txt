@@ -1,0 +1,8 @@
+{% autoescape off %}Mu2eTalks
+
+{% block content %}{% endblock %}
+
+---
+This is an automated message from the Fermilab Mu2eTalks.
+Please do not reply to this email.
+{% endautoescape %}

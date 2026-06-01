@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Reports | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <h1 class="text-2xl font-semibold text-slate-900">Reports</h1>
+
+  <form id="report-form" method="post" class="space-y-5">
+    {% csrf_token %}
+    <div class="bg-white rounded-lg border border-slate-200 p-5 space-y-4">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Filters</h2>
+      <div class="grid gap-4 md:grid-cols-3">
+        <label class="block md:col-span-3">
+          <span class="text-xs font-medium text-slate-600">Full-text search</span>
+          <input name="search" value="{{ filter.form.search.value|default:'' }}" class="mt-1 w-full rounded-md border-slate-300 text-sm" placeholder='muon AND "plenary talk"'>
+        </label>
+        {% for field in filter.form %}
+          {% if field.name != "search" %}
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600">{{ field.label }}</span>
+            {{ field }}
+          </label>
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <button type="button"
+                hx-post="{% url 'reports:preview' %}"
+                hx-target="#preview"
+                hx-include="#report-form"
+                class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">
+          Preview
+        </button>
+        {% for fmt in formats %}
+        <button formaction="{% url 'reports:download' fmt %}" formmethod="post" class="px-4 py-2 rounded-md border border-slate-300 text-sm uppercase">
+          {{ fmt }}
+        </button>
+        {% endfor %}
+      </div>
+    </div>
+    <div id="preview"></div>
+  </form>
+</div>
+{% endblock %}

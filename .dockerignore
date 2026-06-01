@@ -1,0 +1,30 @@
+.git
+.gitignore
+.dockerignore
+.env
+.env.*
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+db.sqlite3
+staticfiles/
+media/
+logs/
+node_modules/
+.pytest_cache/
+htmlcov/
+.coverage
+.claude/
+# Tests and docs — not needed at runtime
+tests/
+*.md
+# Dev start scripts
+start-scd-reporting
+start-scd-reporting.ps1
+# Dev Deployment scripts
+start-docker
+start-docker.ps1
+stop-docker
+stop-docker.ps1

@@ -1,0 +1,20 @@
+from django.conf import settings as django_settings
+
+from .models import SiteSettings
+
+
+def site_settings(request):
+    s = SiteSettings.get_solo()
+    from allauth.mfa import app_settings as mfa_settings
+    from .models import User
+    user = request.user
+    return {
+        'ACCOUNT_ALLOW_SIGNUPS': s.allow_signup,
+        'LOCAL_LOGIN_ENABLED': getattr(django_settings, 'LOCAL_LOGIN_ENABLED', False),
+        'OIDC_ENABLED': getattr(django_settings, 'OIDC_ENABLED', False),
+        'GOOGLE_ENABLED': getattr(django_settings, 'GOOGLE_ENABLED', False),
+        'PASSKEY_LOGIN_ENABLED': mfa_settings.PASSKEY_LOGIN_ENABLED,
+        'role_choices': User.Role.choices,
+        'is_previewing': getattr(user, '_is_previewing', False),
+        'preview_label': getattr(user, '_preview_label', ''),
+    }

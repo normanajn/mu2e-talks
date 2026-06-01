@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Talks | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between gap-4 mb-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-900">Talks</h1>
+    <p class="text-sm text-slate-500">Track conference talks, assignments, practice status, and approvals.</p>
+  </div>
+  <a href="{% url 'talks:create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Talk</a>
+</div>
+
+<form method="get" class="mb-4 flex flex-wrap gap-3 items-end">
+  <label class="block">
+    <span class="text-xs font-medium text-slate-600">Search</span>
+    <input type="search" name="q" value="{{ request.GET.q }}" class="mt-1 rounded-md border-slate-300 text-sm" placeholder="Talk or conference">
+  </label>
+  <label class="block">
+    <span class="text-xs font-medium text-slate-600">Status</span>
+    <select name="status" class="mt-1 rounded-md border-slate-300 text-sm">
+      <option value="">All</option>
+      <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
+      <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+    </select>
+  </label>
+  <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Filter</button>
+</form>
+
+<div class="overflow-x-auto bg-white border border-slate-200 rounded-lg">
+  <table class="min-w-full divide-y divide-slate-200 text-sm">
+    <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+      <tr>
+        <th class="px-4 py-3">Talk</th>
+        <th class="px-4 py-3">Conference</th>
+        <th class="px-4 py-3">Type</th>
+        <th class="px-4 py-3">Assigned</th>
+        <th class="px-4 py-3">Practice</th>
+        <th class="px-4 py-3">Status</th>
+        <th class="px-4 py-3"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {% for talk in talks %}
+      <tr>
+        <td class="px-4 py-3 font-medium text-slate-900">{{ talk.talk_title }}{% if talk.plenary %}<span class="ml-2 text-xs text-mu2e-primary">Plenary</span>{% endif %}{% if talk.parallel %}<span class="ml-2 text-xs text-mu2e-primary">Parallel</span>{% endif %}</td>
+        <td class="px-4 py-3">{{ talk.conference.title|default:"-" }}</td>
+        <td class="px-4 py-3">{{ talk.get_type_display }}</td>
+        <td class="px-4 py-3">{{ talk.assigned_to|default:"Unassigned" }}</td>
+        <td class="px-4 py-3">
+          {{ talk.practice_talk_date|date:"Y-m-d"|default:"-" }}
+          {% if talk.practice_talk_complete %}<span class="ml-1 text-green-700">complete</span>{% endif %}
+        </td>
+        <td class="px-4 py-3">
+          <span class="rounded-full px-2 py-0.5 text-xs font-medium {% if talk.status == 'active' %}bg-green-50 text-green-700{% else %}bg-amber-50 text-amber-700{% endif %}">
+            {{ talk.get_status_display }}
+          </span>
+        </td>
+        <td class="px-4 py-3 text-right">
+          <a class="text-mu2e-primary hover:underline" href="{% url 'talks:detail' talk.pk %}">Open</a>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No talks found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

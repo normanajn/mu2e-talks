@@ -1,0 +1,19 @@
+from django.urls import path
+
+from . import views
+
+app_name = 'taxonomy'
+
+urlpatterns = [
+    path('projects/', views.ProjectManageView.as_view(), name='projects'),
+    path('projects/<int:pk>/edit/', views.ProjectEditView.as_view(), name='project-edit'),
+    path('categories/', views.CategoryManageView.as_view(), name='categories'),
+    path('categories/<int:pk>/edit/', views.CategoryEditView.as_view(), name='category-edit'),
+    path('groups/',              views.WorkGroupManageView.as_view(), name='groups'),
+    path('groups/<int:pk>/edit/', views.WorkGroupEditView.as_view(),  name='group-edit'),
+    path('lab-priorities/',              views.LabPriorityManageView.as_view(), name='lab-priorities'),
+    path('lab-priorities/<int:pk>/edit/', views.LabPriorityEditView.as_view(),  name='lab-priority-edit'),
+    path('export/',              views.TaxonomyExportView.as_view(),  name='export'),
+    path('import/',              views.TaxonomyImportView.as_view(),  name='import'),
+    path('tags/autocomplete/',   views.TagAutocompleteView.as_view(), name='tag-autocomplete'),
+]

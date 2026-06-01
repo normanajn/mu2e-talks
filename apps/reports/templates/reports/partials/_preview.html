@@ -1,0 +1,54 @@
+{% if total == 0 %}
+<div class="bg-white rounded-lg border border-slate-200 px-6 py-10 text-center text-sm text-slate-500">
+  No talks matched these filters.
+</div>
+{% else %}
+<div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+  <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
+    <span class="font-semibold text-slate-900">{{ total }}</span> talk{{ total|pluralize }} matched{% if total > limit %}; showing first {{ limit }}{% endif %}
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-slate-200 text-xs">
+      <thead class="bg-slate-50 text-left font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="px-4 py-2"><input type="checkbox" id="select-all-talks"></th>
+          <th class="px-4 py-2">Talk</th>
+          <th class="px-4 py-2">Conference</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Assigned</th>
+          <th class="px-4 py-2">Type</th>
+          <th class="px-4 py-2">Practice</th>
+          <th class="px-4 py-2">Approval</th>
+          <th class="px-4 py-2">Status</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for talk in rows %}
+        <tr>
+          <td class="px-4 py-2"><input type="checkbox" name="selected_ids" value="{{ talk.pk }}" class="talk-checkbox"></td>
+          <td class="px-4 py-2 font-medium"><a class="text-mu2e-primary hover:underline" href="{% url 'talks:detail' talk.pk %}">{{ talk.talk_title }}</a></td>
+          <td class="px-4 py-2">{{ talk.conference.title|default:"-" }}</td>
+          <td class="px-4 py-2">{{ talk.get_type_display }}</td>
+          <td class="px-4 py-2">{{ talk.assigned_to|default:"Unassigned" }}</td>
+          <td class="px-4 py-2">{% if talk.plenary %}Plenary{% endif %}{% if talk.plenary and talk.parallel %} / {% endif %}{% if talk.parallel %}Parallel{% endif %}{% if not talk.plenary and not talk.parallel %}-{% endif %}</td>
+          <td class="px-4 py-2">{{ talk.practice_talk_date|date:"Y-m-d"|default:"-" }}{% if talk.practice_talk_complete %} complete{% endif %}</td>
+          <td class="px-4 py-2">{% if talk.final_approval %}approved{% else %}pending{% endif %} / {% if talk.complete_given %}given{% else %}not given{% endif %}</td>
+          <td class="px-4 py-2">{{ talk.get_status_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+<script>
+(function () {
+  var selectAll = document.getElementById('select-all-talks');
+  if (!selectAll) return;
+  selectAll.addEventListener('change', function () {
+    document.querySelectorAll('.talk-checkbox').forEach(function (cb) {
+      cb.checked = selectAll.checked;
+    });
+  });
+})();
+</script>
+{% endif %}

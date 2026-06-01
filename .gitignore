@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+staticfiles/
+media/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Node
+node_modules/
+npm-debug.log*
+theme/static/css/dist/
+
+# Docker
+.docker/
+.mu2e-talks-docker.mode
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Runtime / start-stop scripts
+.mu2e-talks.pid
+.mu2e-talks-tailwind.pid
+logs/
+
+# Local Helm overrides (contain secrets — never commit)
+my-values.yaml
+*-my-values.yaml
+
+# Local collaboration roster source and generated imports
+mu2e_collaboration_list.xlsx
+mu2e_collaboration_members.csv
+mu2e_collaboration_institutions.csv
+/mu2e-logo.png
+
+# Exported conversation transcripts (may contain secrets)
+*-transcript.md

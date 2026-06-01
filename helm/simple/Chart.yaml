@@ -1,0 +1,9 @@
+apiVersion: v2
+name: mu2e-talks-simple
+description: Mu2eTalks – simple single-container setup (SQLite, no Caddy)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+keywords:
+  - mu2e-talks
+  - django

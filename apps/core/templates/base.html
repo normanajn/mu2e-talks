@@ -1,0 +1,149 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Mu2eTalks{% endblock %}</title>
+  {% if debug %}
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        'mu2e-primary':       '#0f766e',
+        'mu2e-primary-hover': '#115e59',
+        'mu2e-accent':        '#2563eb',
+        'mu2e-accent-soft':   '#dbeafe',
+        'scd-primary':        '#0f766e',
+        'scd-primary-hover':  '#115e59',
+        'scd-accent':         '#2563eb',
+        'scd-accent-soft':    '#dbeafe',
+      }}}
+    }
+  </script>
+  {% else %}
+  {% load tailwind_tags %}{% tailwind_css %}
+  {% endif %}
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+  {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-slate-50 text-slate-900"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+
+  <nav class="bg-mu2e-primary text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+
+        <div class="flex items-center gap-8">
+          <a href="/" class="text-lg font-semibold tracking-tight whitespace-nowrap">Mu2eTalks</a>
+          {% if user.is_authenticated %}
+          <div class="hidden sm:flex items-center gap-5 text-sm">
+            <a href="{% url 'dashboard' %}" class="opacity-90 hover:opacity-100 hover:underline">Dashboard</a>
+            {% url 'talks:list' as talks_url %}{% if talks_url %}
+            <a href="{{ talks_url }}" class="opacity-90 hover:opacity-100 hover:underline">Talks</a>
+            {% endif %}
+            {% url 'reports:index' as reports_url %}{% if reports_url %}
+            <a href="{{ reports_url }}" class="opacity-90 hover:opacity-100 hover:underline">Reports</a>
+            {% endif %}
+            {% if user.is_mu2e_admin %}
+            <a href="{% url 'admin-users' %}" class="opacity-90 hover:opacity-100 hover:underline">Users</a>
+            {% endif %}
+            {% if user.can_manage_talks %}
+            <a href="{% url 'institutions' %}" class="opacity-90 hover:opacity-100 hover:underline">Institutions</a>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if user.is_authenticated %}
+        <div class="flex items-center gap-3 text-sm">
+          <a href="{% url 'profile' %}" class="opacity-90 hover:opacity-100 hover:underline truncate max-w-[160px]">
+            {{ user.display_name|default:user.email }}
+          </a>
+          {% if is_previewing %}
+          <span class="bg-amber-400 text-amber-900 text-xs px-2 py-0.5 rounded-full font-medium">
+            Previewing: {{ preview_label }}
+          </span>
+          {% elif user.is_mu2e_admin %}
+          <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">Admin</span>
+          <form method="post" action="{% url 'preview-role' %}" class="flex items-center">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.path }}">
+            <select name="role" onchange="this.form.submit()" title="Preview as role"
+                    class="bg-white/10 hover:bg-white/20 text-white text-xs px-2 py-1 rounded border border-white/20 cursor-pointer focus:outline-none">
+              <option value="" class="text-slate-900">Preview as…</option>
+              {% for val, label in role_choices %}{% if val != 'admin' %}
+              <option value="{{ val }}" class="text-slate-900">{{ label }}</option>
+              {% endif %}{% endfor %}
+            </select>
+          </form>
+          {% elif user.is_ib_rep %}
+          <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">IB Rep</span>
+          {% elif user.is_spokesperson %}
+          <span class="bg-white/20 text-xs px-2 py-0.5 rounded-full font-medium">Spokesperson</span>
+          {% endif %}
+          <form method="post" action="{% url 'account_logout' %}">
+            {% csrf_token %}
+            <button type="submit"
+                    class="bg-white/10 hover:bg-white/25 px-3 py-1 rounded text-sm transition-colors">
+              Sign out
+            </button>
+          </form>
+        </div>
+        {% endif %}
+
+      </div>
+    </div>
+  </nav>
+
+  {% if is_previewing %}
+  <div class="bg-amber-50 border-b border-amber-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between gap-4 text-sm">
+      <span class="text-amber-800 font-medium">
+        Role preview active — viewing as <strong>{{ preview_label }}</strong>.
+        Your actual role and data are unchanged.
+      </span>
+      <form method="post" action="{% url 'preview-role' %}">
+        {% csrf_token %}
+        <input type="hidden" name="role" value="exit">
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button type="submit"
+                class="bg-amber-200 hover:bg-amber-300 text-amber-900 text-xs font-medium px-3 py-1 rounded transition-colors whitespace-nowrap">
+          Exit preview
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if messages %}
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
+    {% for message in messages %}
+    <div role="alert"
+         class="px-4 py-3 rounded-md text-sm border
+           {% if 'error' in message.tags %}bg-red-50 text-red-800 border-red-200
+           {% elif 'success' in message.tags %}bg-green-50 text-green-800 border-green-200
+           {% elif 'warning' in message.tags %}bg-yellow-50 text-yellow-800 border-yellow-200
+           {% else %}bg-blue-50 text-blue-800 border-blue-200{% endif %}">
+      {{ message }}
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mt-8 border-t border-slate-200 py-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between text-xs text-slate-400">
+      <span>Fermilab Mu2eTalks</span>
+      <div class="flex gap-4">
+        <a href="{% url 'about' %}" class="hover:text-slate-600">About</a>
+        <a href="{% url 'bug-report' %}" class="hover:text-slate-600">Report a bug</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

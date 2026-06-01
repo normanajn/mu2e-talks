@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Institutions | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-semibold text-slate-900">Institutions</h1>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-lg p-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">Add Institution</h2>
+    <form method="post" class="grid gap-4 md:grid-cols-[1fr_1fr_120px_120px_auto] items-end">
+      {% csrf_token %}
+      <label class="block">
+        <span class="text-xs font-medium text-slate-600">Name</span>
+        <input name="name" value="{{ form.name.value|default:'' }}" required class="mt-1 block w-full rounded-md border-slate-300">
+        {{ form.name.errors }}
+      </label>
+      <label class="block">
+        <span class="text-xs font-medium text-slate-600">URL</span>
+        <input type="url" name="url" value="{{ form.url.value|default:'' }}" class="mt-1 block w-full rounded-md border-slate-300">
+        {{ form.url.errors }}
+      </label>
+      <label class="block">
+        <span class="text-xs font-medium text-slate-600">Sort</span>
+        <input type="number" name="sort_order" value="{{ form.sort_order.value|default:0 }}" class="mt-1 block w-full rounded-md border-slate-300">
+      </label>
+      <label class="inline-flex items-center gap-2 text-sm pb-2">
+        <input type="checkbox" name="is_active" checked class="rounded border-slate-300"> Active
+      </label>
+      <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Add</button>
+    </form>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="px-4 py-3">Name</th>
+          <th class="px-4 py-3">URL</th>
+          <th class="px-4 py-3 w-28">Sort</th>
+          <th class="px-4 py-3 w-28">Active</th>
+          <th class="px-4 py-3 w-28"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for institution in institutions %}
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-800">{{ institution.name }}</td>
+          <td class="px-4 py-3 text-slate-500">
+            {% if institution.url %}<a href="{{ institution.url }}" class="text-mu2e-primary hover:underline">{{ institution.url }}</a>{% else %}-{% endif %}
+          </td>
+          <td class="px-4 py-3 text-slate-500">{{ institution.sort_order }}</td>
+          <td class="px-4 py-3 text-slate-500">{% if institution.is_active %}Yes{% else %}No{% endif %}</td>
+          <td class="px-4 py-3 text-right">
+            <a href="{% url 'institution-edit' institution.pk %}" class="text-mu2e-primary hover:underline">Edit</a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No institutions have been added.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

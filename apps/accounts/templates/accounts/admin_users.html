@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+{% block title %}Users — Mu2eTalks{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+
+  <div class="flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-slate-900">Users</h1>
+    <div class="flex items-center gap-4">
+      {% if request.user.is_scd_admin %}
+      <a href="{% url 'roster-import' %}" class="text-sm font-medium text-scd-primary hover:underline">Import roster</a>
+      {% endif %}
+      <span class="text-sm text-slate-500">{{ users.count }}{% if query %} matched{% else %} total{% endif %}</span>
+    </div>
+  </div>
+
+  {% if request.user.is_scd_admin %}
+  {# ── Site settings strip ──────────────────────────────────────────────────── #}
+  <div class="bg-white rounded-lg border border-slate-200 shadow-sm px-6 py-4 flex flex-wrap items-center gap-4">
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-semibold text-slate-700">Self-serve signup</p>
+      <p class="text-xs text-slate-400 mt-0.5">
+        When enabled, the login page shows a "Sign up" link and new accounts can be created without admin involvement.
+      </p>
+    </div>
+    <form method="post" action="{% url 'signup-toggle' %}">
+      {% csrf_token %}
+      {% if site_settings.allow_signup %}
+      <button type="submit"
+              class="inline-flex items-center gap-2 bg-green-100 text-green-700 hover:bg-green-200 text-sm font-medium px-4 py-2 rounded-md transition-colors">
+        <span class="inline-block w-2 h-2 rounded-full bg-green-500"></span> Enabled — click to disable
+      </button>
+      {% else %}
+      <button type="submit"
+              class="inline-flex items-center gap-2 bg-slate-100 text-slate-500 hover:bg-slate-200 text-sm font-medium px-4 py-2 rounded-md transition-colors">
+        <span class="inline-block w-2 h-2 rounded-full bg-slate-400"></span> Disabled — click to enable
+      </button>
+      {% endif %}
+    </form>
+  </div>
+
+  {% endif %}{# /admin-only site settings #}
+
+  {# ── Users table ──────────────────────────────────────────────────────────── #}
+  <div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden">
+    <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center gap-3 justify-between">
+      <p class="text-sm font-semibold text-slate-700">All users</p>
+      <div class="flex flex-wrap items-center gap-3">
+        <form method="get" class="flex items-center gap-2">
+          <label for="user-search" class="sr-only">Search users</label>
+          <input id="user-search" type="search" name="q" value="{{ query }}"
+                 placeholder="Search users"
+                 class="w-64 rounded-md border border-slate-300 px-3 py-1.5 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none">
+          <button type="submit" class="text-sm font-medium text-scd-primary hover:underline">Search</button>
+          {% if query %}
+          <a href="{% url 'admin-users' %}" class="text-sm text-slate-500 hover:underline">Clear</a>
+          {% endif %}
+        </form>
+        {% if request.user.is_scd_admin %}
+        <button type="button"
+                id="toggle-create-form"
+                class="text-sm font-medium text-scd-primary hover:underline">
+          + Create user
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Create user form — admin only #}
+    {% if request.user.is_scd_admin %}
+    <div id="create-user-form"
+         class="{% if not show_create_form %}hidden{% endif %} px-6 py-5 border-b border-slate-100 bg-slate-50">
+      <h3 class="text-sm font-semibold text-slate-700 mb-4">Create new user</h3>
+      <form method="post" action="{% url 'user-create' %}">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Login Email <span class="text-red-500">*</span></label>
+            <input type="email" name="email"
+                   value="{{ create_form.email.value|default:'' }}"
+                   class="w-full rounded-md border {% if create_form.email.errors %}border-red-400{% else %}border-slate-300{% endif %} px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none"
+                   required>
+            {% for e in create_form.email.errors %}<p class="text-xs text-red-500 mt-1">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Display name</label>
+            <input type="text" name="display_name"
+                   value="{{ create_form.display_name.value|default:'' }}"
+                   class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Institution</label>
+            <select name="institution"
+                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none">
+              <option value="">- No institution -</option>
+              {% for pk, label in create_form.fields.institution.choices %}
+              {% if pk %}
+              <option value="{{ pk }}" {% if create_form.institution.value|stringformat:"s" == pk|stringformat:"s" %}selected{% endif %}>{{ label }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Role</label>
+            <select name="role"
+                    class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none">
+              {% for val, label in role_choices %}
+              <option value="{{ val }}" {% if create_form.role.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Password <span class="text-red-500">*</span></label>
+            <input type="password" name="password"
+                   class="w-full rounded-md border {% if create_form.password.errors %}border-red-400{% else %}border-slate-300{% endif %} px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none"
+                   required>
+            {% for e in create_form.password.errors %}<p class="text-xs text-red-500 mt-1">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label class="block text-xs font-medium text-slate-500 mb-1">Confirm password <span class="text-red-500">*</span></label>
+            <input type="password" name="password2"
+                   class="w-full rounded-md border {% if create_form.password2.errors %}border-red-400{% else %}border-slate-300{% endif %} px-3 py-2 text-sm shadow-sm focus:border-scd-primary focus:ring-1 focus:ring-scd-primary focus:outline-none"
+                   required>
+            {% for e in create_form.password2.errors %}<p class="text-xs text-red-500 mt-1">{{ e }}</p>{% endfor %}
+          </div>
+
+        </div>
+        <div class="flex gap-3 mt-4">
+          <button type="submit"
+                  class="bg-scd-primary hover:bg-scd-primary-hover text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">
+            Create user
+          </button>
+          <button type="button" id="cancel-create-form"
+                  class="text-sm text-slate-400 hover:text-slate-600">
+            Cancel
+          </button>
+        </div>
+      </form>
+    </div>
+    {% endif %}{# /admin-only create form #}
+
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-6 py-3 text-left font-semibold text-slate-600">User</th>
+          <th class="px-6 py-3 text-left font-semibold text-slate-600">Contact Email</th>
+          <th class="px-6 py-3 text-left font-semibold text-slate-600">Institution</th>
+          {% if request.user.is_scd_admin %}
+          <th class="px-6 py-3 text-left font-semibold text-slate-600">Role</th>
+          {% endif %}
+          <th class="px-6 py-3 text-left font-semibold text-slate-600">Joined</th>
+          {% if request.user.is_scd_admin %}
+          <th class="px-6 py-3 text-right font-semibold text-slate-600">Actions</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for u in users %}
+        <tr class="hover:bg-slate-50">
+          <td class="px-6 py-3">
+            <div class="font-medium text-slate-800">{{ u.display_name|default:"—" }}</div>
+            <div class="text-slate-400 text-xs">Login: {{ u.email|default:"-" }}</div>
+          </td>
+          <td class="px-6 py-3 text-slate-500">{{ u.contact_email|default:"-" }}</td>
+          <td class="px-6 py-3 text-slate-500">
+            {{ u.institution.name|default:"-" }}
+          </td>
+          {% if request.user.is_scd_admin %}
+          <td class="px-6 py-3">
+            {% include "accounts/partials/_role_select.html" with u=u role_choices=role_choices %}
+          </td>
+          {% endif %}
+          <td class="px-6 py-3 text-slate-400">{{ u.date_joined|date:"Y-m-d" }}</td>
+          {% if request.user.is_scd_admin %}
+          <td class="px-6 py-3 text-right whitespace-nowrap">
+            <a href="{% url 'user-edit' u.pk %}"
+               class="text-xs text-scd-primary hover:underline mr-3">Edit</a>
+            <a href="{% url 'user-set-password' u.pk %}"
+               class="text-xs text-scd-primary hover:underline mr-3">Reset password</a>
+            {% if u != request.user %}
+            <a href="{% url 'user-delete' u.pk %}"
+               class="text-xs text-red-500 hover:underline">Delete</a>
+            {% else %}
+            <span class="text-xs text-slate-300">Delete</span>
+            {% endif %}
+          </td>
+          {% endif %}
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-8 text-center text-slate-400">No users found.</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var toggleBtn  = document.getElementById('toggle-create-form');
+  var cancelBtn  = document.getElementById('cancel-create-form');
+  var formDiv    = document.getElementById('create-user-form');
+
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function () {
+      formDiv.classList.toggle('hidden');
+    });
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function () {
+      formDiv.classList.add('hidden');
+    });
+  }
+})();
+</script>
+{% endblock %}

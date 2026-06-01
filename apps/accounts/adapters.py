@@ -1,0 +1,36 @@
+from django.conf import settings
+
+from allauth.account.adapter import DefaultAccountAdapter
+from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
+
+
+class AccountAdapter(DefaultAccountAdapter):
+    def is_open_for_signup(self, request):
+        if getattr(settings, 'MU2E_DISABLE_LOCAL_SIGNUP', False):
+            return False
+        from .models import SiteSettings
+        return SiteSettings.get_solo().allow_signup
+
+
+class SocialAccountAdapter(DefaultSocialAccountAdapter):
+    def is_open_for_signup(self, request, sociallogin):
+        # SSO/social logins can always create accounts — only local signup
+        # is gated by SiteSettings.allow_signup / MU2E_DISABLE_LOCAL_SIGNUP.
+        return True
+
+    def populate_user(self, request, sociallogin, data):
+        user = super().populate_user(request, sociallogin, data)
+
+        # Map standard OIDC claims from the IdP (Keycloak / CILogon compatible)
+        extra = sociallogin.account.extra_data
+
+        # Display name: prefer full name, fall back to preferred_username
+        display_name = (
+            extra.get('name')
+            or f"{extra.get('given_name', '')} {extra.get('family_name', '')}".strip()
+            or extra.get('preferred_username', '')
+        )
+        if display_name:
+            user.display_name = display_name
+
+        return user

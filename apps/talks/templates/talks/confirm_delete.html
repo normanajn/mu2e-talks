@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}Delete Talk | Mu2eTalks{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold text-slate-900 mb-4">Delete Talk</h1>
+<form method="post" class="max-w-xl bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+  {% csrf_token %}
+  <p>Delete <strong>{{ object.talk_title }}</strong>?</p>
+  <div class="flex gap-3">
+    <button class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md text-sm">Delete</button>
+    <a href="{% url 'talks:detail' object.pk %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Cancel</a>
+  </div>
+</form>
+{% endblock %}
