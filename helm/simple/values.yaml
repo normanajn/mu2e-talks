@@ -67,6 +67,7 @@ email:
 # ── Google OAuth (optional) ────────────────────────────────────────────────────
 github:
   token: ""
+  issuesRepo: "normanajn/mu2e-talks"
 
 google:
   clientId: ""

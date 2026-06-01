@@ -108,10 +108,9 @@ class BugReportView(LoginRequiredMixin, TemplateView):
 
 
 class BugReportSubmitView(LoginRequiredMixin, View):
-    REPO = 'normanajn/Mu2e-Reporting'
-
     def post(self, request):
         import requests as http_requests
+        from django.conf import settings as django_settings
 
         title = request.POST.get('title', '').strip()
         body = request.POST.get('body', '').strip()
@@ -140,7 +139,7 @@ class BugReportSubmitView(LoginRequiredMixin, View):
 
         try:
             resp = http_requests.post(
-                f'https://api.github.com/repos/{self.REPO}/issues',
+                f'https://api.github.com/repos/{django_settings.GITHUB_ISSUES_REPO}/issues',
                 json={'title': title, 'body': full_body, 'labels': ['bug']},
                 headers={
                     'Authorization': f'Bearer {token}',

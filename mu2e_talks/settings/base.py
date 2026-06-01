@@ -18,6 +18,7 @@ GITHUB_APP_INSTALLATION_ID = os.environ.get('GITHUB_APP_INSTALLATION_ID', '')
 _raw_pem = os.environ.get('GITHUB_APP_PRIVATE_KEY', '')
 GITHUB_APP_PRIVATE_KEY    = _raw_pem.replace('\\n', '\n') if _raw_pem else ''
 GITHUB_TOKEN              = os.environ.get('GITHUB_TOKEN', '')
+GITHUB_ISSUES_REPO        = os.environ.get('GITHUB_ISSUES_REPO', 'normanajn/mu2e-talks')
 
 DEBUG = False
 

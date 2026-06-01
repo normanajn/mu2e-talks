@@ -24,5 +24,6 @@ data:
   EMAIL_HOST_USER: {{ .Values.email.user | quote }}
   DEFAULT_FROM_EMAIL: {{ .Values.email.defaultFrom | quote }}
   GOOGLE_CLIENT_ID: {{ .Values.google.clientId | quote }}
+  GITHUB_ISSUES_REPO: {{ .Values.github.issuesRepo | quote }}
   OIDC_PROVIDER_URL: {{ .Values.oidc.providerUrl | quote }}
   OIDC_CLIENT_ID: {{ .Values.oidc.clientId | quote }}

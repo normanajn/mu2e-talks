@@ -70,6 +70,17 @@ helm upgrade --install mu2e-talks ./helm/simple \
 
 Set `django.secretKey`, `django.initialAdminPassword`, image values, route hostname, and OIDC values in a private values file. Do not commit real secrets.
 
+For subsequent releases, build the Docker image, push it, apply the Helm
+upgrade, restart the deployment, and wait for readiness with:
+
+```bash
+./scripts/deploy-okd.sh
+```
+
+The script uses the exact Git tag on `HEAD` as the image tag. Run
+`./scripts/deploy-okd.sh --help` for repository, namespace, values file, and
+timeout overrides.
+
 ## Verification
 
 ```bash
