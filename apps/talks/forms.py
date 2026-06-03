@@ -69,6 +69,9 @@ class TalkForm(forms.ModelForm):
         self.allow_status = allow_status
         self.fields['conference'].queryset = Conference.objects.order_by('-start_date', 'title')
         self.fields['conference'].required = False
+        self.fields['conference'].label_from_instance = lambda obj: (
+            f'{obj.start_date} — {obj.title}' if obj.start_date else obj.title
+        )
         self.fields['type'].required = False
         self.fields['assigned_to'].required = False
         self.fields['speaker_institution'].required = False
