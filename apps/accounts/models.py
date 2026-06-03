@@ -61,6 +61,17 @@ class InstitutionAlias(models.Model):
 
 
 class User(AbstractUser):
+    class CollaborationPosition(models.TextChoices):
+        LAB_STAFF = 'PL', 'Lab Staff (PL)'
+        POST_DOC = 'PD', 'Post Doc (PD)'
+        RESEARCH_SCIENTIST = 'RS', 'Research Scientist (RS)'
+        GRADUATE_STUDENT = 'SG', 'Graduate Student (SG)'
+        UNDERGRADUATE_STUDENT = 'SU', 'Undergraduate Student (SU)'
+        UNIVERSITY_PROFESSOR = 'PU', 'Univ. Professor (PU)'
+        ENGINEER = 'E', 'Engineer (E)'
+        TECHNICAL = 'T', 'Technical (T)'
+        PRIVATE_INSTITUTION = 'PI', 'Private Inst. (PI)'
+
     class Role(models.TextChoices):
         USER = 'user', 'User'
         IB_REP = 'ib_rep', 'IB Rep'
@@ -78,7 +89,11 @@ class User(AbstractUser):
     display_name = models.CharField(max_length=128, blank=True)
     collaboration_member_number = models.CharField(max_length=32, blank=True, db_index=True)
     collaboration_start_date = models.DateField(null=True, blank=True)
-    collaboration_position = models.CharField(max_length=32, blank=True)
+    collaboration_position = models.CharField(
+        max_length=32,
+        choices=CollaborationPosition.choices,
+        blank=True,
+    )
     collaboration_international = models.CharField(max_length=32, blank=True)
     office_phone = models.CharField(max_length=64, blank=True)
     mobile_phone = models.CharField(max_length=64, blank=True)
@@ -115,6 +130,19 @@ class User(AbstractUser):
         blank=True,
         related_name='functional_leads',
     )
+
+    class Meta:
+        constraints = [
+            models.CheckConstraint(
+                name='accounts_user_valid_collaboration_position',
+                condition=(
+                    models.Q(collaboration_position='')
+                    | models.Q(collaboration_position__in=[
+                        'PL', 'PD', 'RS', 'SG', 'SU', 'PU', 'E', 'T', 'PI',
+                    ])
+                ),
+            ),
+        ]
 
     def __str__(self):
         return self.display_name or self.email or self.username

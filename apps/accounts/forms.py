@@ -9,13 +9,26 @@ from .models import Institution, InstitutionAlias, User, UserAlias
 class ProfileForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['display_name', 'institution']
+        fields = [
+            'display_name', 'contact_email', 'institution',
+            'collaboration_member_number', 'collaboration_start_date',
+            'collaboration_position', 'collaboration_international',
+            'office_phone', 'mobile_phone', 'other_phone', 'collaboration_status',
+            'orcid', 'inspire_id', 'fnal_username', 'github_username',
+            'collaboration_flag', 'minority_serving', 'roster_comments',
+            'is_collaboration_member',
+        ]
+        widgets = {
+            'collaboration_start_date': forms.DateInput(attrs={'type': 'date'}),
+            'roster_comments': forms.Textarea(attrs={'rows': 3}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['institution'].queryset = Institution.objects.filter(is_active=True)
         self.fields['institution'].required = False
         self.fields['institution'].empty_label = '- No institution -'
+        self.fields['contact_email'].required = False
 
 
 class AdminCreateUserForm(forms.ModelForm):

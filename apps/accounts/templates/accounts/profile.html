@@ -2,20 +2,16 @@
 {% block title %}Profile — Mu2eTalks{% endblock %}
 
 {% block content %}
-<div class="max-w-lg">
+<div class="max-w-5xl">
   <h1 class="text-2xl font-bold text-slate-900 mb-6">Profile</h1>
 
   <div class="bg-white rounded-lg border border-slate-200 shadow-sm divide-y divide-slate-100">
 
     <!-- Read-only info -->
-    <div class="px-6 py-4 space-y-3">
+    <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>
         <dt class="text-xs font-medium text-slate-500 uppercase tracking-wide">Login Email</dt>
-        <dd class="mt-0.5 text-sm text-slate-800">{{ user.email }}</dd>
-      </div>
-      <div>
-        <dt class="text-xs font-medium text-slate-500 uppercase tracking-wide">Contact Email</dt>
-        <dd class="mt-0.5 text-sm text-slate-800">{{ user.contact_email|default:"-" }}</dd>
+        <dd class="mt-0.5 text-sm text-slate-800">{{ user.email|default:user.username }}</dd>
       </div>
       <div>
         <dt class="text-xs font-medium text-slate-500 uppercase tracking-wide">Role</dt>
@@ -28,14 +24,23 @@
           </span>
         </dd>
       </div>
+      <div>
+        <dt class="text-xs font-medium text-slate-500 uppercase tracking-wide">Username</dt>
+        <dd class="mt-0.5 text-sm text-slate-800">{{ user.username|default:"-" }}</dd>
+      </div>
     </div>
 
     <!-- Editable fields -->
     <form method="post" class="px-6 py-5">
       {% csrf_token %}
-      {% for field in form %}
-        {% include "components/_form_field.html" %}
-      {% endfor %}
+      {{ form.non_field_errors }}
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+        {% for field in form %}
+          <div{% if field.name == "roster_comments" %} class="md:col-span-2"{% endif %}>
+            {% include "components/_form_field.html" %}
+          </div>
+        {% endfor %}
+      </div>
       <div class="flex gap-3 mt-2">
         <button type="submit"
                 class="bg-scd-primary hover:bg-scd-primary-hover text-white text-sm font-medium px-4 py-2 rounded-md transition-colors">

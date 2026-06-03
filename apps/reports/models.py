@@ -2,23 +2,27 @@ from django.conf import settings
 from django.db import models
 
 DEFAULT_SYSTEM = (
-    "You are an analyst writing structured effort-reporting summaries for a scientific "
-    "computing department. Your summaries are factual, professional, and well-organised. "
+    "You are an analyst writing structured summaries of talks and presentations "
+    "by members of the Mu2e particle physics collaboration at Fermilab. "
+    "Your summaries are factual, professional, and well-organised. "
     "Use Markdown headings and bullet points. Do not invent information beyond what is provided."
 )
 
 DEFAULT_USER_TMPL = """\
-Below is a set of effort talks from the Mu2eTalks system.
-Please write a concise narrative summary that includes:
+{query}
 
-1. **Overview** – date range covered, total talks, and authors involved.
-2. **Key Themes** – the main types of work and projects represented.
-3. **Notable Work** – standout contributions, especially any marked CRITICAL or HIGHLIGHT.
-4. **Summary Table** – a compact Markdown table with columns: Author | Project | Category | Period | Title.
+Below is the Mu2e talks data matching the selected filters:
 
----
 {talks}
 """
+
+DEFAULT_QUERY = (
+    "Please provide a concise narrative summary of these Mu2e talks, including:\n\n"
+    "1. **Overview** – date range covered, total talks, conferences, and speakers involved.\n"
+    "2. **Key Themes** – the main talk types (plenary, parallel, seminar, etc.) and programs represented.\n"
+    "3. **Notable Presentations** – standout contributions, especially approved and completed talks.\n"
+    "4. **Summary Table** – a compact Markdown table with columns: Speaker | Conference | Date | Type | Title."
+)
 
 
 class AIPromptConfig(models.Model):

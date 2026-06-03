@@ -45,6 +45,48 @@ def _is_true(value):
     return value.strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
 
 
+def _normalize_collaboration_position(value, line_number):
+    value = str(value or '').strip()
+    if not value:
+        return ''
+    normalized = value.lower().replace('.', '').strip()
+    aliases = {
+        'pl': User.CollaborationPosition.LAB_STAFF,
+        'lab staff': User.CollaborationPosition.LAB_STAFF,
+        'pd': User.CollaborationPosition.POST_DOC,
+        'post doc': User.CollaborationPosition.POST_DOC,
+        'postdoc': User.CollaborationPosition.POST_DOC,
+        'rs': User.CollaborationPosition.RESEARCH_SCIENTIST,
+        'research scientist': User.CollaborationPosition.RESEARCH_SCIENTIST,
+        'sg': User.CollaborationPosition.GRADUATE_STUDENT,
+        'graduate student': User.CollaborationPosition.GRADUATE_STUDENT,
+        'su': User.CollaborationPosition.UNDERGRADUATE_STUDENT,
+        'undergraduate student': User.CollaborationPosition.UNDERGRADUATE_STUDENT,
+        'pu': User.CollaborationPosition.UNIVERSITY_PROFESSOR,
+        'univ professor': User.CollaborationPosition.UNIVERSITY_PROFESSOR,
+        'university professor': User.CollaborationPosition.UNIVERSITY_PROFESSOR,
+        'e': User.CollaborationPosition.ENGINEER,
+        'engineer': User.CollaborationPosition.ENGINEER,
+        't': User.CollaborationPosition.TECHNICAL,
+        'technical': User.CollaborationPosition.TECHNICAL,
+        'pi': User.CollaborationPosition.PRIVATE_INSTITUTION,
+        'private inst': User.CollaborationPosition.PRIVATE_INSTITUTION,
+        'private institution': User.CollaborationPosition.PRIVATE_INSTITUTION,
+    }
+    if normalized in aliases:
+        return aliases[normalized]
+    for code, label in User.CollaborationPosition.choices:
+        if normalized == label.lower().replace('.', '').replace(f'({code.lower()})', '').strip():
+            return code
+        if normalized == label.lower().replace('.', '').strip():
+            return code
+    allowed = ', '.join(code for code, _ in User.CollaborationPosition.choices)
+    raise RosterImportError(
+        f'Row {line_number}: invalid collaboration position "{value}". '
+        f'Expected one of: {allowed}.'
+    )
+
+
 def _unique_username(base):
     base = base or 'mu2e-member'
     candidate = base
@@ -125,7 +167,7 @@ def import_members(upload):
             'institution': institution,
             'collaboration_member_number': member_number,
             'collaboration_start_date': _parse_date(row.get('start date', '')),
-            'collaboration_position': row.get('position', '').strip(),
+            'collaboration_position': _normalize_collaboration_position(row.get('position', ''), line_number),
             'collaboration_international': row.get('int.', '').strip(),
             'office_phone': row.get('office phone', '').strip(),
             'mobile_phone': row.get('mobile phone', '').strip(),

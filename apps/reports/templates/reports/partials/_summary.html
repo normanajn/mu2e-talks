@@ -1,22 +1,27 @@
 {% if error %}
-<div class="bg-red-50 border border-red-200 rounded-lg px-6 py-5 mt-6">
-  <p class="text-sm font-semibold text-red-700 mb-1">AI summary failed</p>
+<div class="bg-red-50 border border-red-200 rounded-lg px-6 py-5 mt-4">
+  <p class="text-sm font-semibold text-red-700 mb-1">AI query failed</p>
   <p class="text-sm text-red-600">{{ error }}</p>
 </div>
 {% else %}
-<div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden mt-6">
+<div class="bg-white rounded-lg border border-slate-200 shadow-sm overflow-hidden mt-4">
   <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-3">
-    <p class="text-sm font-semibold text-slate-700">
-      AI Summary
-      <span class="ml-2 text-xs font-normal text-slate-400">{{ count }} entr{{ count|pluralize:"y,ies" }}</span>
-    </p>
+    <div>
+      <p class="text-sm font-semibold text-slate-700">
+        AI Response
+        <span class="ml-2 text-xs font-normal text-slate-400">{{ count }} talk{{ count|pluralize }}</span>
+      </p>
+      {% if query %}
+      <p class="text-xs text-slate-400 mt-0.5 truncate max-w-lg" title="{{ query }}">Query: {{ query }}</p>
+      {% endif %}
+    </div>
     <div class="flex gap-2">
-      <form method="post" action="{% url 'reports:summary-download-txt' %}">
+      <form method="post" action="{% url 'reports:summary-download-md' %}">
         {% csrf_token %}
         <textarea name="summary_text" class="hidden">{{ summary_text }}</textarea>
         <button type="submit"
                 class="text-xs font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-wide">
-          ↓ TXT
+          ↓ MD
         </button>
       </form>
       <form method="post" action="{% url 'reports:summary-download-pdf' %}">
@@ -25,14 +30,6 @@
         <button type="submit"
                 class="text-xs font-medium px-3 py-1.5 rounded border border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors uppercase tracking-wide">
           ↓ PDF
-        </button>
-      </form>
-      <form method="post" action="{% url 'talks:create-from-summary' %}">
-        {% csrf_token %}
-        <textarea name="summary_text" class="hidden">{{ summary_text }}</textarea>
-        <button type="submit"
-                class="text-xs font-medium px-3 py-1.5 rounded border border-scd-primary text-scd-primary hover:bg-scd-primary hover:text-white transition-colors uppercase tracking-wide">
-          + New Talk
         </button>
       </form>
     </div>

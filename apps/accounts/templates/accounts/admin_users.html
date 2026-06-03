@@ -8,6 +8,7 @@
     <h1 class="text-2xl font-bold text-slate-900">Users</h1>
     <div class="flex items-center gap-4">
       {% if request.user.is_scd_admin %}
+      <a href="{% url 'user-aliases' %}" class="text-sm font-medium text-scd-primary hover:underline">User aliases</a>
       <a href="{% url 'roster-import' %}" class="text-sm font-medium text-scd-primary hover:underline">Import roster</a>
       {% endif %}
       <span class="text-sm text-slate-500">{{ users.count }}{% if query %} matched{% else %} total{% endif %}</span>

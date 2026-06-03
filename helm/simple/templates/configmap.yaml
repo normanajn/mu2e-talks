@@ -28,3 +28,5 @@ data:
   GITHUB_ISSUES_REPO: {{ .Values.github.issuesRepo | quote }}
   OIDC_PROVIDER_URL: {{ .Values.oidc.providerUrl | quote }}
   OIDC_CLIENT_ID: {{ .Values.oidc.clientId | quote }}
+  ANTHROPIC_SUMMARY_MODEL: {{ .Values.anthropic.summaryModel | quote }}
+  ANTHROPIC_BASE_URL: {{ .Values.anthropic.baseUrl | quote }}

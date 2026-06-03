@@ -80,3 +80,10 @@ oidc:
   providerUrl: ""
   clientId: ""
   clientSecret: ""
+
+# ── Anthropic AI (optional) ────────────────────────────────────────────────────
+anthropic:
+  # REQUIRED for AI summarization – set in my-values.yaml, never commit a real key here
+  apiKey: ""
+  summaryModel: "claude-sonnet-4-6"
+  baseUrl: ""

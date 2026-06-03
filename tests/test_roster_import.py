@@ -21,12 +21,12 @@ def admin(db):
     )
 
 
-def _member_csv(email='person@example.com', ib_rep='True'):
+def _member_csv(email='person@example.com', ib_rep='True', position='PD'):
     return (
         'institution number,institution,institution website,institution code,member number,member,'
         'start date,position,int.,contact email,office phone,mobile phone,other phone,status,ORCID,'
         'Inspire ID,FNAL username,GitHub username,flag,minority serving,comments,IB Rep\n'
-        f'7,Example University,physics.example.edu,U,42,\"Person, Pat\",2020-02-03,PD,D,{email},'
+        f'7,Example University,physics.example.edu,U,42,\"Person, Pat\",2020-02-03,{position},D,{email},'
         f'111,222,333,QE,0000-0001-0002-0003,123,pperson,patgit,F,M,Imported comment,{ib_rep}\n'
     )
 
@@ -84,6 +84,28 @@ def test_member_without_email_receives_stable_fallback_username(client, admin):
     assert user.email == ''
     assert user.contact_email == ''
     assert user.username == 'pperson'
+
+
+def test_member_import_normalizes_collaboration_position_label(client, admin):
+    client.force_login(admin)
+    response = client.post(reverse('roster-import'), {
+        'import_type': 'members',
+        'csv_file': _upload('members.csv', _member_csv(position='Research Scientist (RS)')),
+    })
+    assert response.status_code == 302
+    user = User.objects.get(collaboration_member_number='42')
+    assert user.collaboration_position == User.CollaborationPosition.RESEARCH_SCIENTIST
+
+
+def test_member_import_rejects_unknown_collaboration_position(client, admin):
+    client.force_login(admin)
+    response = client.post(reverse('roster-import'), {
+        'import_type': 'members',
+        'csv_file': _upload('members.csv', _member_csv(position='Researcher')),
+    })
+    assert response.status_code == 200
+    assert 'invalid collaboration position' in response.content.decode()
+    assert not User.objects.filter(collaboration_member_number='42').exists()
 
 
 def test_regular_user_cannot_open_import_page(client, db):
