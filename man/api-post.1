@@ -1,0 +1,144 @@
+.TH API-POST 1 "2026-06-03" "Mu2eTalks" "Mu2eTalks"
+.SH NAME
+api-post \- post JSON records to the Mu2eTalks API
+.SH SYNOPSIS
+.B ./scripts/api-post.sh
+[\fIOPTIONS\fR]
+.SH DESCRIPTION
+.B api-post.sh
+sends token-authenticated JSON
+.B POST
+requests to the Mu2eTalks application API.
+.PP
+The script supports the three create endpoints currently exposed by the
+application:
+.BR talks ,
+.BR institutions ,
+and
+.BR conferences .
+It can also post to an explicit API path for testing or future endpoints.
+.PP
+Authentication uses an API token created from the in-application
+.B /api/
+page. Tokens inherit the role of the user who created them. Create requests
+require an Admin, Spokesperson, or IB Rep token.
+.SH OPTIONS
+.TP
+.BI \-u " URL" ", " \-\-url " URL" ", " \-\-base-url " URL"
+Base URL of the Mu2eTalks application.
+.br
+Default:
+.B MU2E_TALKS_URL
+or
+.BR http://localhost:8000 .
+.TP
+.BI \-t " TOKEN" ", " \-\-token " TOKEN"
+API token to send in the
+.B Authorization: Bearer
+header.
+.br
+Default:
+.BR MU2E_API_TOKEN .
+.TP
+.BI \-\-token-file " FILE"
+Read the API token from the first line of
+.IR FILE .
+.br
+Default:
+.BR MU2E_API_TOKEN_FILE .
+.TP
+.BI \-r " RESOURCE" ", " \-\-resource " RESOURCE"
+Resource to create. Accepted values are
+.BR talks ,
+.BR institutions ,
+and
+.BR conferences .
+Singular aliases are also accepted.
+.TP
+.BI \-p " PATH" ", " \-\-path " PATH"
+Explicit API path to post to, overriding
+.BR \-\-resource .
+For example:
+.BR /api/v1/talks/ .
+.TP
+.BI \-d " JSON" ", " \-\-data " JSON"
+JSON request body supplied directly on the command line.
+.TP
+.BI \-f " FILE" ", " \-\-file " FILE"
+Read the JSON request body from
+.IR FILE .
+.TP
+.BI \-\-curl-args " ARGS"
+Additional argument string passed to
+.BR curl .
+This is useful for diagnostics, for example
+.BR "--include" .
+.TP
+.B \-\-dry-run
+Print the target URL and request body without posting.
+.TP
+.B \-h ", " \-\-help
+Show the script help and exit.
+.SH ENVIRONMENT
+.TP
+.B MU2E_TALKS_URL
+Default base application URL.
+.TP
+.B MU2E_API_TOKEN
+Default API token.
+.TP
+.B MU2E_API_TOKEN_FILE
+Path to a file containing the API token.
+.SH EXAMPLES
+Create a conference on the local development server:
+.PP
+.RS
+.EX
+MU2E_API_TOKEN=mu2e_... \&./scripts/api-post.sh \\
+  --resource conferences \\
+  --data '{"title":"Muon Physics 2027","start_date":"2027-06-01"}'
+.EE
+.RE
+.PP
+Create an institution from a JSON file against the OKD deployment:
+.PP
+.RS
+.EX
+\&./scripts/api-post.sh \\
+  --url https://mu2e-talks.fnal.gov \\
+  --token-file ~/.mu2e-talks-api-token \\
+  --resource institutions \\
+  --file institution.json
+.EE
+.RE
+.PP
+Create a talk:
+.PP
+.RS
+.EX
+\&./scripts/api-post.sh \\
+  --url https://mu2e-talks.fnal.gov \\
+  --token-file ~/.mu2e-talks-api-token \\
+  --resource talks \\
+  --data '{"talk_title":"Muon conversion overview","conference_title":"Muon Physics 2027","type":"conference","status":"active"}'
+.EE
+.RE
+.PP
+Preview a request without sending it:
+.PP
+.RS
+.EX
+\&./scripts/api-post.sh --resource conferences --token mu2e_... \\
+  --data '{"title":"Dry Run"}' --dry-run
+.EE
+.RE
+.SH FILES
+.TP
+.B scripts/api-post.sh
+Shell script wrapper around
+.BR curl .
+.TP
+.B man/api-post.1
+Manual page for this command.
+.SH SEE ALSO
+.BR curl (1)

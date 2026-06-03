@@ -28,12 +28,36 @@
     <dd class="mt-1 font-medium">{{ object.assigned_to|default:"Unassigned" }}</dd>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <dt class="text-xs uppercase tracking-wide text-slate-500">Speaker</dt>
+    <dd class="mt-1 font-medium">
+      {% if object.speaker_first_name or object.speaker_last_name %}
+      {{ object.speaker_first_name }} {{ object.speaker_last_name }}
+      {% else %}
+      -
+      {% endif %}
+    </dd>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
     <dt class="text-xs uppercase tracking-wide text-slate-500">DocDB Number</dt>
-    <dd class="mt-1 font-medium">{{ object.docdb_number|default:"-" }}</dd>
+    <dd class="mt-1 font-medium">
+      {% if object.docdb_url %}
+      <a class="text-mu2e-primary hover:underline" href="{{ object.docdb_url }}">{{ object.docdb_number }}</a>
+      {% else %}
+      {{ object.docdb_number|default:"-" }}
+      {% endif %}
+    </dd>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
     <dt class="text-xs uppercase tracking-wide text-slate-500">Type</dt>
-    <dd class="mt-1 font-medium">{{ object.get_type_display }}</dd>
+    <dd class="mt-1 font-medium">{{ object.get_type_display }}{% if object.spreadsheet_type_raw %} <span class="text-slate-500">({{ object.spreadsheet_type_raw }})</span>{% endif %}</dd>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <dt class="text-xs uppercase tracking-wide text-slate-500">Presentation Date</dt>
+    <dd class="mt-1 font-medium">{{ object.presentation_date|date:"Y-m-d"|default:"-" }}</dd>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <dt class="text-xs uppercase tracking-wide text-slate-500">Length</dt>
+    <dd class="mt-1 font-medium">{{ object.duration_raw|default:object.duration_minutes|default:"-" }}</dd>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
     <dt class="text-xs uppercase tracking-wide text-slate-500">Plenary</dt>
@@ -48,17 +72,31 @@
     <dd class="mt-1 font-medium">{{ object.conference.start_date|date:"Y-m-d"|default:"-" }} - {{ object.conference.end_date|date:"Y-m-d"|default:"-" }}</dd>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <dt class="text-xs uppercase tracking-wide text-slate-500">Home Institution</dt>
+    <dd class="mt-1 font-medium">{{ object.speaker_institution|default:object.speaker_home_institution_raw|default:"-" }}</dd>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
     <dt class="text-xs uppercase tracking-wide text-slate-500">Practice Talk</dt>
     <dd class="mt-1 font-medium">{{ object.practice_talk_date|date:"Y-m-d"|default:"-" }}{% if object.practice_talk_complete %} complete{% endif %}</dd>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
     <dt class="text-xs uppercase tracking-wide text-slate-500">Approval</dt>
-    <dd class="mt-1 font-medium">{% if object.final_approval %}Approved{% else %}Pending{% endif %} / {% if object.complete_given %}Given{% else %}Not given{% endif %}</dd>
+    <dd class="mt-1 font-medium">{% if object.final_approval %}Approved{% else %}Pending{% endif %}{% if object.committee_approved_raw %} ({{ object.committee_approved_raw }}){% endif %} / {% if object.complete_given %}Given{% else %}Not given{% endif %}</dd>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <dt class="text-xs uppercase tracking-wide text-slate-500">Program</dt>
+    <dd class="mt-1 font-medium">{{ object.mu2e_program|default:"-" }}</dd>
   </div>
 </dl>
 
 {% if object.conference.url %}
 <p class="mb-6 text-sm"><a class="text-mu2e-primary hover:underline" href="{{ object.conference.url }}">{{ object.conference.url }}</a></p>
+{% endif %}
+{% if object.proceedings_url or object.arxiv_url %}
+<div class="mb-6 text-sm space-y-1">
+  {% if object.proceedings_url %}<p><span class="font-medium">Proceedings:</span> <a class="text-mu2e-primary hover:underline" href="{{ object.proceedings_url }}">{{ object.proceedings_url }}</a></p>{% endif %}
+  {% if object.arxiv_url %}<p><span class="font-medium">arXiv:</span> <a class="text-mu2e-primary hover:underline" href="{{ object.arxiv_url }}">{{ object.arxiv_url }}</a></p>{% endif %}
+</div>
 {% endif %}
 
 <section class="prose max-w-none bg-white border border-slate-200 rounded-lg p-5">

@@ -4,6 +4,7 @@
 <div class="space-y-6">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-semibold text-slate-900">Institutions</h1>
+    <a href="{% url 'institution-aliases' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Institution Aliases</a>
   </div>
 
   <div class="bg-white border border-slate-200 rounded-lg p-5">
@@ -61,5 +62,26 @@
       </tbody>
     </table>
   </div>
+
+  {% if is_paginated %}
+  <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
+    <div class="text-slate-600">
+      Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }}
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% if page_obj.has_previous %}
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page=1">First</a>
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+      {% endif %}
+      <span class="px-3 py-1.5 text-slate-600">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+      {% endif %}
+    </div>
+  </div>
+  {% elif institutions %}
+  <div class="text-sm text-slate-600">Showing {{ institutions|length }} institution{{ institutions|length|pluralize }}</div>
+  {% endif %}
 </div>
 {% endblock %}

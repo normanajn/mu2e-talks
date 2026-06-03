@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}API | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-semibold text-slate-900">API</h1>
+    <p class="text-sm text-slate-500">Create Mu2eTalks records with token-authenticated JSON requests.</p>
+  </div>
+
+  {% if new_token %}
+  <div class="rounded-md border border-amber-300 bg-amber-50 p-4">
+    <h2 class="text-sm font-semibold text-amber-900">New API Token</h2>
+    <p class="mt-1 text-sm text-amber-900">This token is shown once.</p>
+    <code class="mt-3 block overflow-x-auto rounded bg-white p-3 text-sm text-slate-900">{{ new_token }}</code>
+  </div>
+  {% endif %}
+
+  {% if user.can_manage_talks %}
+  <div class="bg-white border border-slate-200 rounded-lg p-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">API Tokens</h2>
+    <form method="post" class="mb-5 flex flex-wrap items-end gap-3">
+      {% csrf_token %}
+      <label class="block">
+        <span class="text-xs font-medium text-slate-600">Token Name</span>
+        <input name="name" class="mt-1 rounded-md border-slate-300 text-sm" placeholder="Import script">
+      </label>
+      <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Create Token</button>
+    </form>
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-slate-200 text-sm">
+        <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr><th class="px-4 py-3">Name</th><th class="px-4 py-3">Prefix</th><th class="px-4 py-3">Last Used</th><th class="px-4 py-3">Active</th><th class="px-4 py-3"></th></tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          {% for token in tokens %}
+          <tr>
+            <td class="px-4 py-3 font-medium">{{ token.name }}</td>
+            <td class="px-4 py-3 text-slate-500">{{ token.prefix }}...</td>
+            <td class="px-4 py-3 text-slate-500">{{ token.last_used_at|date:"Y-m-d H:i"|default:"-" }}</td>
+            <td class="px-4 py-3 text-slate-500">{% if token.is_active %}Yes{% else %}No{% endif %}</td>
+            <td class="px-4 py-3 text-right">
+              {% if token.is_active %}
+              <form method="post" action="{% url 'api:token-revoke' token.pk %}">
+                {% csrf_token %}
+                <button class="text-red-700 hover:underline">Revoke</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No API tokens have been created.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Authentication</h2>
+    <pre class="overflow-x-auto rounded bg-slate-950 p-4 text-sm text-slate-100"><code>Authorization: Bearer mu2e_...</code></pre>
+    <p class="text-sm text-slate-600">Tokens inherit the role of the user who created them. API creates require Admin, Spokesperson, or IB Rep role.</p>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Create Institution</h2>
+    <p class="text-sm text-slate-600"><code>POST /api/v1/institutions/</code></p>
+    <pre class="overflow-x-auto rounded bg-slate-950 p-4 text-sm text-slate-100"><code>{
+  "name": "Example University",
+  "url": "https://example.edu",
+  "collaboration_code": "EXU",
+  "is_active": true
+}</code></pre>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Create Conference</h2>
+    <p class="text-sm text-slate-600"><code>POST /api/v1/conferences/</code></p>
+    <pre class="overflow-x-auto rounded bg-slate-950 p-4 text-sm text-slate-100"><code>{
+  "title": "Muon Physics 2027",
+  "start_date": "2027-06-01",
+  "end_date": "2027-06-05",
+  "url": "https://example.org/conference"
+}</code></pre>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-lg p-5 space-y-5">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500">Create Talk</h2>
+    <p class="text-sm text-slate-600"><code>POST /api/v1/talks/</code></p>
+    <pre class="overflow-x-auto rounded bg-slate-950 p-4 text-sm text-slate-100"><code>{
+  "talk_title": "Muon conversion overview",
+  "conference_title": "Muon Physics 2027",
+  "conference_start_date": "2027-06-01",
+  "conference_end_date": "2027-06-05",
+  "type": "conference",
+  "status": "active",
+  "docdb_number": "12345",
+  "plenary": true,
+  "assigned_to_email": "speaker@example.edu",
+  "comments": "Created through the API"
+}</code></pre>
+  </div>
+</div>
+{% endblock %}

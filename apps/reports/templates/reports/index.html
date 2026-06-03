@@ -22,22 +22,54 @@
           {% endif %}
         {% endfor %}
       </div>
-      <div class="flex flex-wrap gap-3">
-        <button type="button"
-                hx-post="{% url 'reports:preview' %}"
-                hx-target="#preview"
-                hx-include="#report-form"
-                class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">
-          Preview
-        </button>
-        {% for fmt in formats %}
-        <button formaction="{% url 'reports:download' fmt %}" formmethod="post" class="px-4 py-2 rounded-md border border-slate-300 text-sm uppercase">
-          {{ fmt }}
-        </button>
-        {% endfor %}
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap gap-3">
+          <button type="submit"
+                  hx-post="{% url 'reports:preview' %}"
+                  hx-target="#preview"
+                  hx-include="#report-form"
+                  hx-vals='{"page": "1"}'
+                  class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">
+            Preview
+          </button>
+          <button type="button"
+                  id="report-reset"
+                  class="px-4 py-2 rounded-md border border-slate-300 text-sm">
+            Clear
+          </button>
+        </div>
+        <div class="ml-auto flex flex-wrap items-center justify-end gap-3">
+          <span class="text-xs font-semibold uppercase tracking-wide text-slate-500">Export to:</span>
+          {% for fmt in formats %}
+          <button formaction="{% url 'reports:download' fmt %}" formmethod="post" class="px-4 py-2 rounded-md border border-slate-300 text-sm uppercase">
+            {{ fmt }}
+          </button>
+          {% endfor %}
+        </div>
       </div>
     </div>
     <div id="preview"></div>
   </form>
 </div>
+<script>
+  document.getElementById('report-reset')?.addEventListener('click', () => {
+    const form = document.getElementById('report-form');
+    if (!form) return;
+
+    form.querySelectorAll('input, select, textarea').forEach((field) => {
+      if (field.name === 'csrfmiddlewaretoken') return;
+
+      if (field.type === 'checkbox' || field.type === 'radio') {
+        field.checked = field.defaultChecked;
+      } else if (field.tagName === 'SELECT') {
+        const defaultOption = Array.from(field.options).find((option) => option.defaultSelected);
+        field.value = defaultOption ? defaultOption.value : '';
+      } else {
+        field.value = field.defaultValue || '';
+      }
+    });
+
+    document.getElementById('preview')?.replaceChildren();
+  });
+</script>
 {% endblock %}

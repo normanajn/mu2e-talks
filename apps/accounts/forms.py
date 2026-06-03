@@ -3,7 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from .models import Institution, User
+from .models import Institution, InstitutionAlias, User, UserAlias
 
 
 class ProfileForm(forms.ModelForm):
@@ -69,6 +69,45 @@ class InstitutionForm(forms.ModelForm):
             'name', 'url', 'collaboration_number', 'collaboration_code',
             'sort_order', 'is_active',
         ]
+
+
+class InstitutionAliasForm(forms.ModelForm):
+    class Meta:
+        model = InstitutionAlias
+        fields = ['alias', 'institution', 'notes', 'is_active']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['institution'].queryset = Institution.objects.all()
+
+
+class InstitutionAliasImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label='Alias CSV file',
+        help_text='Upload CSV with alias and institution_name columns.',
+    )
+
+
+class UserAliasForm(forms.ModelForm):
+    class Meta:
+        model = UserAlias
+        fields = [
+            'first_name_alias', 'last_name_alias', 'full_name_alias',
+            'user', 'institution', 'notes', 'is_active',
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['user'].queryset = User.objects.order_by('display_name', 'email', 'username')
+        self.fields['institution'].queryset = Institution.objects.all()
+        self.fields['institution'].required = False
+
+
+class UserAliasImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label='Alias CSV file',
+        help_text='Upload CSV with first_name_alias/last_name_alias or full_name_alias plus user_email, username, or user_display_name.',
+    )
 
 
 class AdminEditUserForm(forms.ModelForm):

@@ -4,7 +4,7 @@ import django_filters
 from django import forms
 from django.db.models import Q
 
-from apps.accounts.models import User
+from apps.accounts.models import Institution, User
 from apps.talks.models import Talk
 
 
@@ -39,6 +39,17 @@ class TalkFilter(django_filters.FilterSet):
         queryset=User.objects.order_by('email'),
         empty_label='All users',
         label='Assigned person',
+    )
+    assigned_institution = django_filters.ModelChoiceFilter(
+        field_name='assigned_to__institution',
+        queryset=Institution.objects.filter(is_active=True).order_by('sort_order', 'name'),
+        empty_label='All institutions',
+        label='Assigned institution',
+    )
+    speaker_institution = django_filters.ModelChoiceFilter(
+        queryset=Institution.objects.filter(is_active=True).order_by('sort_order', 'name'),
+        empty_label='All institutions',
+        label='Speaker institution',
     )
     practice_talk_date = django_filters.DateFilter(label='Practice talk date')
     practice_talk_complete = django_filters.BooleanFilter(label='Practice complete')
@@ -75,8 +86,18 @@ class TalkFilter(django_filters.FilterSet):
                 | Q(conference__title__icontains=term)
                 | Q(conference__url__icontains=term)
                 | Q(docdb_number__icontains=term)
+                | Q(docdb_password_number__icontains=term)
+                | Q(docdb_certificate_number__icontains=term)
                 | Q(assigned_to__email__icontains=term)
                 | Q(assigned_to__display_name__icontains=term)
+                | Q(speaker_first_name__icontains=term)
+                | Q(speaker_last_name__icontains=term)
+                | Q(speaker_home_institution_raw__icontains=term)
+                | Q(speaker_institution__name__icontains=term)
+                | Q(spreadsheet_type_raw__icontains=term)
+                | Q(mu2e_program__icontains=term)
+                | Q(proceedings_url__icontains=term)
+                | Q(arxiv_url__icontains=term)
                 | Q(comments__icontains=term)
             )
 

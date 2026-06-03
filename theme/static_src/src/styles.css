@@ -13,3 +13,21 @@
   --mu2e-paper-soft:    #f8fafc;
   --mu2e-border:        #e2e8f0;
 }
+
+@layer base {
+  input:not([type="button"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not([type="radio"]):not([type="reset"]):not([type="submit"]),
+  select,
+  textarea {
+    background-color: #ffffff;
+    border-color: #94a3b8;
+    outline: 1px solid rgba(148, 163, 184, 0.55);
+    outline-offset: 0;
+  }
+
+  input:not([type="button"]):not([type="checkbox"]):not([type="file"]):not([type="hidden"]):not([type="radio"]):not([type="reset"]):not([type="submit"]):focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--mu2e-primary);
+    outline: 2px solid rgba(15, 118, 110, 0.32);
+  }
+}

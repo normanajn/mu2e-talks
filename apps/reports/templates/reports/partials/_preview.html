@@ -5,7 +5,8 @@
 {% else %}
 <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
   <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 text-sm text-slate-600">
-    <span class="font-semibold text-slate-900">{{ total }}</span> talk{{ total|pluralize }} matched{% if total > limit %}; showing first {{ limit }}{% endif %}
+    <span class="font-semibold text-slate-900">{{ total }}</span> talk{{ total|pluralize }} matched;
+    showing {{ page_obj.start_index }}-{{ page_obj.end_index }}
   </div>
   <div class="overflow-x-auto">
     <table class="min-w-full divide-y divide-slate-200 text-xs">
@@ -39,6 +40,41 @@
       </tbody>
     </table>
   </div>
+  {% if paginator.num_pages > 1 %}
+  <div class="px-5 py-3 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 text-sm">
+    <div class="text-slate-600">Page {{ page_obj.number }} of {{ paginator.num_pages }}</div>
+    <div class="flex flex-wrap gap-2">
+      {% if page_obj.has_previous %}
+      <button type="button"
+              hx-post="{% url 'reports:preview' %}"
+              hx-target="#preview"
+              hx-include="#report-form"
+              hx-vals='{"page": "1"}'
+              class="px-3 py-1.5 rounded-md border border-slate-300 bg-white">First</button>
+      <button type="button"
+              hx-post="{% url 'reports:preview' %}"
+              hx-target="#preview"
+              hx-include="#report-form"
+              hx-vals='{"page": "{{ page_obj.previous_page_number }}"}'
+              class="px-3 py-1.5 rounded-md border border-slate-300 bg-white">Previous</button>
+      {% endif %}
+      {% if page_obj.has_next %}
+      <button type="button"
+              hx-post="{% url 'reports:preview' %}"
+              hx-target="#preview"
+              hx-include="#report-form"
+              hx-vals='{"page": "{{ page_obj.next_page_number }}"}'
+              class="px-3 py-1.5 rounded-md border border-slate-300 bg-white">Next</button>
+      <button type="button"
+              hx-post="{% url 'reports:preview' %}"
+              hx-target="#preview"
+              hx-include="#report-form"
+              hx-vals='{"page": "{{ paginator.num_pages }}"}'
+              class="px-3 py-1.5 rounded-md border border-slate-300 bg-white">Last</button>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
 </div>
 <script>
 (function () {

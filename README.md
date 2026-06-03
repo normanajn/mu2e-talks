@@ -81,6 +81,46 @@ The script uses the exact Git tag on `HEAD` as the image tag. Run
 `./scripts/deploy-okd.sh --help` for repository, namespace, values file, and
 timeout overrides.
 
+## Conference Import
+
+The application ships with a CSV snapshot of upcoming experiment-HEP
+conferences from INSPIRE. The seed migration loads the snapshot automatically
+on deployment. To import a refreshed CSV manually:
+
+```bash
+python3 manage.py import_conferences \
+  apps/talks/data/inspire_upcoming_experiment_hep_conferences.csv
+```
+
+The required CSV columns are `inspire_id`, `title`, `start_date`, `end_date`,
+and `url`. Re-importing a record with the same `inspire_id` updates it instead
+of creating a duplicate.
+
+## Talk Spreadsheet Import
+
+Manager roles can upload the historical Mu2e talks workbook from the Talks page:
+
+```text
+Talks -> Import Spreadsheet
+```
+
+The upload accepts the original `.xlsx` workbook or normalized JSON generated
+from the workbook. Command-line equivalents:
+
+```bash
+python3 manage.py talk_spreadsheet_to_json \
+  TalksSpreadsheet-DocDB3701.xlsx \
+  /tmp/mu2e_talks_import.json
+
+python3 manage.py import_talk_spreadsheet \
+  TalksSpreadsheet-DocDB3701.xlsx \
+  --created-by mu2e-admin
+```
+
+Imports are idempotent by workbook name, sheet name, and row number. Speaker and
+institution matches are attempted against existing users and institutions; raw
+spreadsheet names are retained when a match is not found.
+
 ## Verification
 
 ```bash

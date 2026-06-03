@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block title %}{% if object %}Edit Conference{% else %}New Conference{% endif %} | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <h1 class="text-2xl font-semibold text-slate-900">{% if object %}Edit Conference{% else %}New Conference{% endif %}</h1>
+</div>
+
+<form method="post" class="space-y-5 max-w-3xl">
+  {% csrf_token %}
+  {% for field in form %}
+  <label class="block">
+    <span class="text-sm font-medium text-slate-700">{{ field.label }}</span>
+    {% render_field field class="mt-1 block w-full rounded-md border-slate-300" %}
+    {{ field.errors }}
+  </label>
+  {% endfor %}
+  <div class="flex gap-3">
+    <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Save</button>
+    <a href="{% url 'talks:conferences' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Cancel</a>
+  </div>
+</form>
+{% endblock %}

@@ -17,6 +17,7 @@ route:
   # Set to the public hostname to create an OKD Route with TLS edge termination.
   # Leave empty to skip Route creation.
   hostname: ""
+  timeout: 300s
 
 # ── cert-manager ───────────────────────────────────────────────────────────────
 certManager:
@@ -54,6 +55,7 @@ database:
 # ── Gunicorn ───────────────────────────────────────────────────────────────────
 gunicorn:
   workers: 3
+  timeout: 300
   logLevel: info
 
 # ── Email (SMTP) ───────────────────────────────────────────────────────────────

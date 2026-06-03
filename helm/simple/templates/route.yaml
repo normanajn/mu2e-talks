@@ -4,6 +4,8 @@ kind: Route
 metadata:
   name: web
   namespace: {{ .Release.Namespace }}
+  annotations:
+    haproxy.router.openshift.io/timeout: {{ .Values.route.timeout | quote }}
   labels:
     {{- include "mu2e-talks-simple.labels" . | nindent 4 }}
 spec:

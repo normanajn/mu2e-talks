@@ -3,10 +3,17 @@ from django import forms
 from .models import Conference, Talk
 
 
+class TalkSpreadsheetImportForm(forms.Form):
+    spreadsheet_file = forms.FileField(
+        label='Talk spreadsheet',
+        help_text='Upload the Mu2e talks workbook as an .xlsx file.',
+    )
+
+
 class ConferenceForm(forms.ModelForm):
     class Meta:
         model = Conference
-        fields = ['title', 'start_date', 'end_date', 'url']
+        fields = ['inspire_id', 'title', 'start_date', 'end_date', 'url']
         widgets = {
             'start_date': forms.DateInput(attrs={'type': 'date'}),
             'end_date': forms.DateInput(attrs={'type': 'date'}),
@@ -24,19 +31,34 @@ class TalkForm(forms.ModelForm):
         fields = [
             'conference',
             'talk_title',
+            'presentation_date',
             'type',
+            'spreadsheet_type_raw',
             'docdb_number',
+            'docdb_password_number',
+            'docdb_certificate_number',
             'plenary',
             'parallel',
             'assigned_to',
+            'speaker_first_name',
+            'speaker_last_name',
+            'speaker_institution',
+            'speaker_home_institution_raw',
+            'duration_minutes',
+            'duration_raw',
             'practice_talk_date',
             'practice_talk_complete',
             'final_approval',
+            'committee_approved_raw',
             'complete_given',
+            'mu2e_program',
+            'proceedings_url',
+            'arxiv_url',
             'comments',
             'status',
         ]
         widgets = {
+            'presentation_date': forms.DateInput(attrs={'type': 'date'}),
             'practice_talk_date': forms.DateInput(attrs={'type': 'date'}),
             'comments': forms.Textarea(attrs={'rows': 8}),
         }
@@ -49,7 +71,9 @@ class TalkForm(forms.ModelForm):
         self.fields['conference'].required = False
         self.fields['type'].required = False
         self.fields['assigned_to'].required = False
+        self.fields['speaker_institution'].required = False
         self.fields['practice_talk_date'].required = False
+        self.fields['duration_minutes'].required = False
         if not allow_status:
             self.fields['status'].widget = forms.HiddenInput()
         if self.instance and self.instance.conference_id:

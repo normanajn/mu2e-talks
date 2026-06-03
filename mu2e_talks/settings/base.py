@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'apps.talks.apps.TalksConfig',
     'apps.reports.apps.ReportsConfig',
     'apps.audit.apps.AuditConfig',
+    'apps.api.apps.ApiConfig',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

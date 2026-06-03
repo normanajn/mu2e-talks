@@ -1,3 +1,4 @@
+from django.core.paginator import EmptyPage, Paginator
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django.views import View
@@ -28,10 +29,21 @@ class ReportIndexView(TalkReporterRequiredMixin, View):
 class ReportPreviewView(TalkReporterRequiredMixin, View):
     def post(self, request):
         f, qs = _filtered_qs(request.POST)
+        paginator = Paginator(qs, PREVIEW_LIMIT)
+        try:
+            page_number = int(request.POST.get('page', 1))
+        except (TypeError, ValueError):
+            page_number = 1
+        try:
+            page_obj = paginator.page(page_number)
+        except EmptyPage:
+            page_obj = paginator.page(paginator.num_pages)
         return render(request, 'reports/partials/_preview.html', {
             'filter': f,
-            'rows': qs[:PREVIEW_LIMIT],
-            'total': qs.count(),
+            'rows': page_obj.object_list,
+            'page_obj': page_obj,
+            'paginator': paginator,
+            'total': paginator.count,
             'limit': PREVIEW_LIMIT,
         })
 

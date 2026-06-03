@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Institution, User
+from .models import Institution, InstitutionAlias, User, UserAlias
 
 
 @admin.register(Institution)
@@ -10,6 +10,22 @@ class InstitutionAdmin(admin.ModelAdmin):
     list_editable = ('sort_order', 'is_active')
     search_fields = ('name',)
     ordering = ('sort_order', 'name')
+
+
+@admin.register(InstitutionAlias)
+class InstitutionAliasAdmin(admin.ModelAdmin):
+    list_display = ('alias', 'institution', 'is_active', 'updated_at')
+    list_filter = ('is_active', 'institution')
+    search_fields = ('alias', 'institution__name')
+    ordering = ('alias',)
+
+
+@admin.register(UserAlias)
+class UserAliasAdmin(admin.ModelAdmin):
+    list_display = ('full_name_alias', 'first_name_alias', 'last_name_alias', 'user', 'institution', 'is_active')
+    list_filter = ('is_active', 'institution')
+    search_fields = ('full_name_alias', 'first_name_alias', 'last_name_alias', 'user__display_name', 'user__email')
+    ordering = ('last_name_alias', 'first_name_alias', 'full_name_alias')
 
 
 @admin.register(User)

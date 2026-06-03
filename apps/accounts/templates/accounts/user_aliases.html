@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}User Aliases | Mu2eTalks{% endblock %}
+{% block content %}
+<div class="space-y-6">
+  <div class="flex items-center justify-between gap-4">
+    <div>
+      {% if user.is_mu2e_admin %}
+      <a href="{% url 'admin-users' %}" class="text-sm text-mu2e-primary hover:underline">&larr; Users</a>
+      {% else %}
+      <a href="{% url 'talks:list' %}" class="text-sm text-mu2e-primary hover:underline">&larr; Talks</a>
+      {% endif %}
+      <h1 class="text-2xl font-semibold text-slate-900">User Aliases</h1>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2">
+    <div class="bg-white border border-slate-200 rounded-lg p-5">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">Add Alias</h2>
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600">First Name Alias</span>
+            <input name="first_name_alias" value="{{ form.first_name_alias.value|default:'' }}" class="mt-1 block w-full rounded-md border-slate-300">
+            {{ form.first_name_alias.errors }}
+          </label>
+          <label class="block">
+            <span class="text-xs font-medium text-slate-600">Last Name Alias</span>
+            <input name="last_name_alias" value="{{ form.last_name_alias.value|default:'' }}" class="mt-1 block w-full rounded-md border-slate-300">
+            {{ form.last_name_alias.errors }}
+          </label>
+        </div>
+        <label class="block">
+          <span class="text-xs font-medium text-slate-600">Full Name Alias</span>
+          <input name="full_name_alias" value="{{ form.full_name_alias.value|default:'' }}" class="mt-1 block w-full rounded-md border-slate-300">
+          {{ form.full_name_alias.errors }}
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-slate-600">User</span>
+          {{ form.user }}
+          {{ form.user.errors }}
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-slate-600">Institution Context</span>
+          {{ form.institution }}
+          {{ form.institution.errors }}
+        </label>
+        <label class="block">
+          <span class="text-xs font-medium text-slate-600">Notes</span>
+          <input name="notes" value="{{ form.notes.value|default:'' }}" class="mt-1 block w-full rounded-md border-slate-300">
+          {{ form.notes.errors }}
+        </label>
+        <label class="inline-flex items-center gap-2 text-sm">
+          <input type="checkbox" name="is_active" checked class="rounded border-slate-300"> Active
+        </label>
+        <button class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">Add Alias</button>
+      </form>
+    </div>
+
+    <div class="bg-white border border-slate-200 rounded-lg p-5">
+      <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-500 mb-4">Import Aliases</h2>
+      <form method="post" enctype="multipart/form-data" class="space-y-4">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="import">
+        <label class="block">
+          <span class="text-xs font-medium text-slate-600">CSV file</span>
+          <input type="file" name="csv_file" accept=".csv,text/csv" required class="mt-1 block w-full rounded-md border border-slate-300 text-sm">
+          {{ import_form.csv_file.errors }}
+        </label>
+        <p class="text-sm text-slate-500">Required columns: full_name_alias or first_name_alias and last_name_alias, plus user_email, username, or user_display_name.</p>
+        <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Import</button>
+      </form>
+    </div>
+  </div>
+
+  <form method="get" class="flex flex-wrap items-end gap-3">
+    <label class="block">
+      <span class="text-xs font-medium text-slate-600">Search</span>
+      <input type="search" name="q" value="{{ query }}" class="mt-1 rounded-md border-slate-300 text-sm" placeholder="Alias, user, or institution">
+    </label>
+    <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Search</button>
+    {% if query %}
+    <a href="{% url 'user-aliases' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Clear</a>
+    {% endif %}
+  </form>
+
+  <div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200 text-sm">
+      <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <tr>
+          <th class="px-4 py-3">Alias</th>
+          <th class="px-4 py-3">User</th>
+          <th class="px-4 py-3">Institution Context</th>
+          <th class="px-4 py-3">Notes</th>
+          <th class="px-4 py-3 w-28">Active</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for alias in aliases %}
+        <tr>
+          <td class="px-4 py-3 font-medium text-slate-800">{{ alias.full_name_alias|default:alias.first_name_alias }} {{ alias.last_name_alias }}</td>
+          <td class="px-4 py-3 text-slate-500">{{ alias.user }}</td>
+          <td class="px-4 py-3 text-slate-500">{{ alias.institution.name|default:"-" }}</td>
+          <td class="px-4 py-3 text-slate-500">{{ alias.notes|default:"-" }}</td>
+          <td class="px-4 py-3 text-slate-500">{% if alias.is_active %}Yes{% else %}No{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="px-4 py-8 text-center text-slate-500">No user aliases have been added.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div class="flex flex-wrap items-center justify-between gap-3 text-sm">
+    <div class="text-slate-600">
+      Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }}
+    </div>
+    <div class="flex flex-wrap gap-2">
+      {% if page_obj.has_previous %}
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page=1">First</a>
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+      {% endif %}
+      <span class="px-3 py-1.5 text-slate-600">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+      {% if page_obj.has_next %}
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+      <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+      {% endif %}
+    </div>
+  </div>
+  {% elif aliases %}
+  <div class="text-sm text-slate-600">Showing {{ aliases|length }} alias{{ aliases|length|pluralize:"es" }}</div>
+  {% endif %}
+</div>
+{% endblock %}

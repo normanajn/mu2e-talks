@@ -56,8 +56,12 @@ logs/
 my-values.yaml
 *-my-values.yaml
 
+# Local API tokens
+.mu2e-talks-api-token
+
 # Local collaboration roster source and generated imports
 mu2e_collaboration_list.xlsx
+TalksSpreadsheet-DocDB3701.xlsx
 mu2e_collaboration_members.csv
 mu2e_collaboration_institutions.csv
 /mu2e-logo.png

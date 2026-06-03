@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
-from django.db.models import Q
+from django.db.models import ProtectedError, Q
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -10,8 +10,9 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.permissions import TalkDeleteRequiredMixin, TalkManagerRequiredMixin
 from apps.core.markdown import render_markdown
 
-from .forms import TalkForm
+from .forms import ConferenceForm, TalkForm, TalkSpreadsheetImportForm
 from .models import Conference, Talk
+from .spreadsheet_import import TalkSpreadsheetImportError, import_talk_records, records_from_json, workbook_to_records
 
 
 def _can_edit(user, talk):
@@ -22,7 +23,16 @@ class TalkListView(LoginRequiredMixin, ListView):
     model = Talk
     template_name = 'talks/list.html'
     context_object_name = 'talks'
-    paginate_by = 25
+    paginate_by = 50
+    page_size_options = ('50', '100', '200', 'all')
+
+    def get_paginate_by(self, queryset):
+        per_page = self.request.GET.get('per_page', '50').strip().lower()
+        if per_page == 'all':
+            return None
+        if per_page in self.page_size_options:
+            return int(per_page)
+        return self.paginate_by
 
     def get_queryset(self):
         qs = Talk.objects.select_related('conference', 'assigned_to', 'created_by')
@@ -36,6 +46,18 @@ class TalkListView(LoginRequiredMixin, ListView):
         if status in Talk.Status.values:
             qs = qs.filter(status=status)
         return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        per_page = self.request.GET.get('per_page', '50').strip().lower()
+        if per_page not in self.page_size_options:
+            per_page = '50'
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        ctx['per_page'] = per_page
+        ctx['page_size_options'] = self.page_size_options
+        ctx['pagination_query'] = query_params.urlencode()
+        return ctx
 
 
 class TalkCreateView(LoginRequiredMixin, CreateView):
@@ -159,3 +181,89 @@ class ConferenceListView(TalkManagerRequiredMixin, ListView):
     template_name = 'talks/conferences.html'
     context_object_name = 'conferences'
     paginate_by = 50
+
+    def get_queryset(self):
+        qs = Conference.objects.all()
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(Q(title__icontains=q) | Q(url__icontains=q) | Q(inspire_id__icontains=q))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        ctx['query'] = self.request.GET.get('q', '').strip()
+        ctx['pagination_query'] = query_params.urlencode()
+        return ctx
+
+
+class TalkSpreadsheetImportView(TalkManagerRequiredMixin, View):
+    template_name = 'talks/import_spreadsheet.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': TalkSpreadsheetImportForm()})
+
+    def post(self, request):
+        form = TalkSpreadsheetImportForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, self.template_name, {'form': form})
+        upload = form.cleaned_data['spreadsheet_file']
+        try:
+            if upload.name.lower().endswith('.json'):
+                counts = import_talk_records(records_from_json(upload), created_by=request.user)
+            else:
+                counts = import_talk_records(workbook_to_records(upload), created_by=request.user)
+        except TalkSpreadsheetImportError as exc:
+            form.add_error('spreadsheet_file', str(exc))
+            return render(request, self.template_name, {'form': form})
+
+        messages.success(
+            request,
+            f'Talk import complete: {counts["created"]} created, {counts["updated"]} updated, '
+            f'{counts["matched_users"]} speakers matched, {counts["unmatched_users"]} speakers unmatched, '
+            f'{counts["matched_institutions"]} institutions matched, '
+            f'{counts["unmatched_institutions"]} institutions unmatched.',
+        )
+        return redirect('talks:spreadsheet-import')
+
+
+class ConferenceCreateView(TalkManagerRequiredMixin, CreateView):
+    model = Conference
+    form_class = ConferenceForm
+    template_name = 'talks/conference_form.html'
+    success_url = reverse_lazy('talks:conferences')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Conference "{form.instance.title}" created.')
+        return super().form_valid(form)
+
+
+class ConferenceUpdateView(TalkManagerRequiredMixin, UpdateView):
+    model = Conference
+    form_class = ConferenceForm
+    template_name = 'talks/conference_form.html'
+    success_url = reverse_lazy('talks:conferences')
+
+    def form_valid(self, form):
+        messages.success(self.request, f'Conference "{form.instance.title}" updated.')
+        return super().form_valid(form)
+
+
+class ConferenceDeleteView(TalkManagerRequiredMixin, DeleteView):
+    model = Conference
+    template_name = 'talks/conference_confirm_delete.html'
+    success_url = reverse_lazy('talks:conferences')
+
+    def form_valid(self, form):
+        title = self.object.title
+        try:
+            response = super().form_valid(form)
+        except ProtectedError:
+            messages.error(
+                self.request,
+                f'Conference "{title}" cannot be deleted because it is assigned to one or more talks.',
+            )
+            return redirect('talks:conferences')
+        messages.success(self.request, f'Conference "{title}" deleted.')
+        return response

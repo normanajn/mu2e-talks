@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Delete Conference | Mu2eTalks{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-semibold text-slate-900 mb-4">Delete Conference</h1>
+<form method="post" class="max-w-xl bg-white border border-slate-200 rounded-lg p-5 space-y-4">
+  {% csrf_token %}
+  <p>Delete <strong>{{ object.title }}</strong>?</p>
+  {% if object.talks.exists %}
+  <p class="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+    This conference is assigned to one or more talks and cannot be deleted.
+  </p>
+  {% endif %}
+  <div class="flex gap-3">
+    {% if not object.talks.exists %}
+    <button class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-md text-sm">Delete</button>
+    {% endif %}
+    <a href="{% url 'talks:conferences' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Cancel</a>
+  </div>
+</form>
+{% endblock %}

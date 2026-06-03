@@ -37,6 +37,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        krb5-user \
+        openssh-client \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY docker/web/krb5.conf /etc/krb5.conf
+
 # Install dependencies before copying the rest of the source (better layer cache)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

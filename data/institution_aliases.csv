@@ -1,0 +1,12 @@
+alias,institution_name,notes,is_active
+INFN,"Instituto Nazionale di Fisica Nucleare","INFN",true
+INFN Lecce,"Instituto Nazionale di Fisica Nucleare, Lecce","Lecce",true
+INFN/Roma Tre,"Instituto Nazionale di Fisica Nucleare, Roma","Rome",true
+Lecce,"Instituto Nazionale di Fisica Nucleare, Lecce","Lecce",true
+LNF and Roma Tre,"Instituto Nazionale di Fisica Nucleare, Roma","Rome",true
+Rice,"Rice University","Rice University",true
+UAlabama,"University of South Alabama","Abbreviation",true
+USA,"University of South Alabama","Abbreviation is ambiguous",true
+York,"York College/CUNY","York",true
+York College,"York College/CUNY","York",true
+York/CUNY,"York College/CUNY","York",true

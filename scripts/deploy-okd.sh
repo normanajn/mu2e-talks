@@ -78,7 +78,15 @@ if [[ ! -f "${VALUES_FILE}" ]]; then
     error "Helm values file not found: ${VALUES_FILE}"
     exit 1
 fi
-oc whoami >/dev/null
+if ! oc whoami >/dev/null 2>&1; then
+    warn "No active OKD login found. Starting web login..."
+    oc login --web
+    if ! oc whoami >/dev/null 2>&1; then
+        error "OKD login did not produce an active session."
+        exit 1
+    fi
+fi
+success "Authenticated to OKD as $(oc whoami)"
 oc get deployments -n "${NAMESPACE}" >/dev/null
 success "Prerequisites available; OKD project is ${NAMESPACE}"
 

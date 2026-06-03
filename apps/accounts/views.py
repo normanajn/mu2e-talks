@@ -10,11 +10,23 @@ from django.views.generic import ListView, UpdateView
 
 from apps.taxonomy.models import WorkGroup
 
-from .forms import AdminCreateUserForm, AdminEditUserForm, InstitutionForm, ProfileForm, RosterImportForm
-from .models import Institution, SiteSettings
+from .forms import (
+    AdminCreateUserForm,
+    AdminEditUserForm,
+    InstitutionAliasForm,
+    InstitutionAliasImportForm,
+    InstitutionForm,
+    ProfileForm,
+    RosterImportForm,
+    UserAliasForm,
+    UserAliasImportForm,
+)
+from .institution_alias_import import InstitutionAliasImportError, import_institution_aliases
+from .models import Institution, InstitutionAlias, SiteSettings, UserAlias
 from .permissions import AdminRequiredMixin, TalkManagerRequiredMixin, UserPageRequiredMixin
 from .roster_import import RosterImportError, import_institutions, import_members
 from .roster_merge import available_roster_records, merge_roster_record, suggested_roster_records
+from .user_alias_import import UserAliasImportError, import_user_aliases
 
 User = get_user_model()
 
@@ -358,13 +370,17 @@ class InstitutionListView(TalkManagerRequiredMixin, ListView):
     model = Institution
     template_name = 'accounts/institutions.html'
     context_object_name = 'institutions'
+    paginate_by = 50
 
     def get_queryset(self):
         return Institution.objects.all()
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx['form'] = InstitutionForm()
+        ctx.setdefault('form', InstitutionForm())
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        ctx['pagination_query'] = query_params.urlencode()
         return ctx
 
     def post(self, request):
@@ -373,10 +389,8 @@ class InstitutionListView(TalkManagerRequiredMixin, ListView):
             form.save()
             messages.success(request, 'Institution created.')
             return redirect('institutions')
-        return render(request, self.template_name, {
-            'institutions': Institution.objects.all(),
-            'form': form,
-        })
+        self.object_list = self.get_queryset()
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class InstitutionUpdateView(TalkManagerRequiredMixin, View):
@@ -389,6 +403,113 @@ class InstitutionUpdateView(TalkManagerRequiredMixin, View):
         else:
             messages.error(request, 'Could not update institution.')
         return redirect('institutions')
+
+
+class InstitutionAliasListView(TalkManagerRequiredMixin, ListView):
+    model = InstitutionAlias
+    template_name = 'accounts/institution_aliases.html'
+    context_object_name = 'aliases'
+    paginate_by = 50
+
+    def get_queryset(self):
+        qs = InstitutionAlias.objects.select_related('institution')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(Q(alias__icontains=q) | Q(institution__name__icontains=q))
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault('form', InstitutionAliasForm())
+        ctx.setdefault('import_form', InstitutionAliasImportForm())
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        ctx['query'] = self.request.GET.get('q', '').strip()
+        ctx['pagination_query'] = query_params.urlencode()
+        return ctx
+
+    def post(self, request):
+        if request.POST.get('action') == 'import':
+            import_form = InstitutionAliasImportForm(request.POST, request.FILES)
+            if import_form.is_valid():
+                try:
+                    counts = import_institution_aliases(import_form.cleaned_data['csv_file'])
+                except InstitutionAliasImportError as exc:
+                    import_form.add_error('csv_file', str(exc))
+                else:
+                    messages.success(
+                        request,
+                        f'Alias import complete: {counts["created"]} created, '
+                        f'{counts["updated"]} updated, {counts["skipped"]} skipped.',
+                    )
+                    return redirect('institution-aliases')
+            self.object_list = self.get_queryset()
+            return self.render_to_response(self.get_context_data(import_form=import_form))
+
+        form = InstitutionAliasForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Institution alias created.')
+            return redirect('institution-aliases')
+        self.object_list = self.get_queryset()
+        return self.render_to_response(self.get_context_data(form=form))
+
+
+class UserAliasListView(TalkManagerRequiredMixin, ListView):
+    model = UserAlias
+    template_name = 'accounts/user_aliases.html'
+    context_object_name = 'aliases'
+    paginate_by = 50
+
+    def get_queryset(self):
+        qs = UserAlias.objects.select_related('user', 'institution')
+        q = self.request.GET.get('q', '').strip()
+        if q:
+            qs = qs.filter(
+                Q(first_name_alias__icontains=q)
+                | Q(last_name_alias__icontains=q)
+                | Q(full_name_alias__icontains=q)
+                | Q(user__display_name__icontains=q)
+                | Q(user__email__icontains=q)
+                | Q(institution__name__icontains=q)
+            )
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx.setdefault('form', UserAliasForm())
+        ctx.setdefault('import_form', UserAliasImportForm())
+        query_params = self.request.GET.copy()
+        query_params.pop('page', None)
+        ctx['query'] = self.request.GET.get('q', '').strip()
+        ctx['pagination_query'] = query_params.urlencode()
+        return ctx
+
+    def post(self, request):
+        if request.POST.get('action') == 'import':
+            import_form = UserAliasImportForm(request.POST, request.FILES)
+            if import_form.is_valid():
+                try:
+                    counts = import_user_aliases(import_form.cleaned_data['csv_file'])
+                except UserAliasImportError as exc:
+                    import_form.add_error('csv_file', str(exc))
+                else:
+                    messages.success(
+                        request,
+                        f'User alias import complete: {counts["created"]} created, '
+                        f'{counts["updated"]} updated, {counts["skipped"]} skipped.',
+                    )
+                    return redirect('user-aliases')
+            self.object_list = self.get_queryset()
+            return self.render_to_response(self.get_context_data(import_form=import_form))
+
+        form = UserAliasForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'User alias created.')
+            return redirect('user-aliases')
+        self.object_list = self.get_queryset()
+        return self.render_to_response(self.get_context_data(form=form))
 
 
 class InstitutionEditView(TalkManagerRequiredMixin, UpdateView):

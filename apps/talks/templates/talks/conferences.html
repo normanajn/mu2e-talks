@@ -1,11 +1,26 @@
 {% extends "base.html" %}
 {% block title %}Conferences | Mu2eTalks{% endblock %}
 {% block content %}
-<h1 class="text-2xl font-semibold text-slate-900 mb-6">Conferences</h1>
+<div class="mb-6 flex items-center justify-between gap-4">
+  <h1 class="text-2xl font-semibold text-slate-900">Conferences</h1>
+  <a href="{% url 'talks:conference-create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Conference</a>
+</div>
+
+<form method="get" class="mb-4 flex flex-wrap items-end gap-3">
+  <label class="block">
+    <span class="text-xs font-medium text-slate-600">Search</span>
+    <input type="search" name="q" value="{{ query }}" class="mt-1 rounded-md border-slate-300 text-sm" placeholder="Title, URL, or INSPIRE ID">
+  </label>
+  <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Search</button>
+  {% if query %}
+  <a href="{% url 'talks:conferences' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Clear</a>
+  {% endif %}
+</form>
+
 <div class="overflow-x-auto bg-white border border-slate-200 rounded-lg">
   <table class="min-w-full divide-y divide-slate-200 text-sm">
     <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
-      <tr><th class="px-4 py-3">Title</th><th class="px-4 py-3">Dates</th><th class="px-4 py-3">URL</th></tr>
+      <tr><th class="px-4 py-3">Title</th><th class="px-4 py-3">Dates</th><th class="px-4 py-3">URL</th><th class="px-4 py-3 text-right">Actions</th></tr>
     </thead>
     <tbody class="divide-y divide-slate-100">
       {% for conference in conferences %}
@@ -13,11 +28,36 @@
         <td class="px-4 py-3 font-medium">{{ conference.title }}</td>
         <td class="px-4 py-3">{{ conference.start_date|date:"Y-m-d"|default:"-" }} - {{ conference.end_date|date:"Y-m-d"|default:"-" }}</td>
         <td class="px-4 py-3">{% if conference.url %}<a class="text-mu2e-primary hover:underline" href="{{ conference.url }}">{{ conference.url }}</a>{% endif %}</td>
+        <td class="px-4 py-3 text-right whitespace-nowrap">
+          <a class="text-mu2e-primary hover:underline" href="{% url 'talks:conference-edit' conference.pk %}">Edit</a>
+          <a class="ml-3 text-red-700 hover:underline" href="{% url 'talks:conference-delete' conference.pk %}">Delete</a>
+        </td>
       </tr>
       {% empty %}
-      <tr><td colspan="3" class="px-4 py-8 text-center text-slate-500">No conferences found.</td></tr>
+      <tr><td colspan="4" class="px-4 py-8 text-center text-slate-500">No conferences found.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+
+{% if is_paginated %}
+<div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+  <div class="text-slate-600">
+    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }}
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if page_obj.has_previous %}
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page=1">First</a>
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-slate-600">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{% if pagination_query %}{{ pagination_query }}&{% endif %}page={{ paginator.num_pages }}">Last</a>
+    {% endif %}
+  </div>
+</div>
+{% elif conferences %}
+<div class="mt-4 text-sm text-slate-600">Showing {{ conferences|length }} conference{{ conferences|length|pluralize }}</div>
+{% endif %}
 {% endblock %}

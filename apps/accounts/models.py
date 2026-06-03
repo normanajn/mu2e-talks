@@ -1,5 +1,21 @@
+import re
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+
+
+def normalize_institution_alias(value):
+    value = str(value or '').strip().lower()
+    value = value.replace('&', ' and ')
+    return re.sub(r'[^a-z0-9]+', ' ', value).strip()
+
+
+def normalize_user_alias_name(first_name='', last_name='', full_name=''):
+    if full_name:
+        value = full_name
+    else:
+        value = f'{first_name or ""} {last_name or ""}'
+    return normalize_institution_alias(value)
 
 
 class Institution(models.Model):
@@ -17,6 +33,31 @@ class Institution(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class InstitutionAlias(models.Model):
+    alias = models.CharField(max_length=160, unique=True)
+    normalized_alias = models.CharField(max_length=160, unique=True, db_index=True, editable=False)
+    institution = models.ForeignKey(
+        Institution,
+        on_delete=models.CASCADE,
+        related_name='aliases',
+    )
+    notes = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['alias']
+        verbose_name_plural = 'Institution aliases'
+
+    def save(self, *args, **kwargs):
+        self.normalized_alias = normalize_institution_alias(self.alias)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.alias} -> {self.institution}'
 
 
 class User(AbstractUser):
@@ -101,6 +142,44 @@ class User(AbstractUser):
     @property
     def can_delete_talks(self):
         return self.is_mu2e_admin or self.is_spokesperson
+
+
+class UserAlias(models.Model):
+    first_name_alias = models.CharField(max_length=128, blank=True)
+    last_name_alias = models.CharField(max_length=128, blank=True)
+    full_name_alias = models.CharField(max_length=255, blank=True)
+    normalized_alias = models.CharField(max_length=255, unique=True, db_index=True, editable=False)
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='aliases',
+    )
+    institution = models.ForeignKey(
+        Institution,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name='user_aliases',
+    )
+    notes = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True, db_index=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['last_name_alias', 'first_name_alias', 'full_name_alias']
+        verbose_name_plural = 'User aliases'
+
+    def save(self, *args, **kwargs):
+        self.normalized_alias = normalize_user_alias_name(
+            self.first_name_alias,
+            self.last_name_alias,
+            self.full_name_alias,
+        )
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.full_name_alias or f"{self.first_name_alias} {self.last_name_alias}".strip()} -> {self.user}'
 
 
 class SiteSettings(models.Model):

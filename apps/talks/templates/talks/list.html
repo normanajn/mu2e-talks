@@ -6,7 +6,12 @@
     <h1 class="text-2xl font-semibold text-slate-900">Talks</h1>
     <p class="text-sm text-slate-500">Track conference talks, assignments, practice status, and approvals.</p>
   </div>
-  <a href="{% url 'talks:create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Talk</a>
+  <div class="flex gap-2">
+    {% if user.can_manage_talks %}
+    <a href="{% url 'talks:spreadsheet-import' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Import Spreadsheet</a>
+    {% endif %}
+    <a href="{% url 'talks:create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Talk</a>
+  </div>
 </div>
 
 <form method="get" class="mb-4 flex flex-wrap gap-3 items-end">
@@ -20,6 +25,15 @@
       <option value="">All</option>
       <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
       <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
+    </select>
+  </label>
+  <label class="block">
+    <span class="text-xs font-medium text-slate-600">Rows</span>
+    <select name="per_page" class="mt-1 rounded-md border-slate-300 text-sm">
+      <option value="50" {% if per_page == "50" %}selected{% endif %}>50</option>
+      <option value="100" {% if per_page == "100" %}selected{% endif %}>100</option>
+      <option value="200" {% if per_page == "200" %}selected{% endif %}>200</option>
+      <option value="all" {% if per_page == "all" %}selected{% endif %}>All</option>
     </select>
   </label>
   <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Filter</button>
@@ -64,4 +78,25 @@
     </tbody>
   </table>
 </div>
+
+{% if is_paginated %}
+<div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">
+  <div class="text-slate-600">
+    Showing {{ page_obj.start_index }}-{{ page_obj.end_index }} of {{ paginator.count }}
+  </div>
+  <div class="flex flex-wrap gap-2">
+    {% if page_obj.has_previous %}
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{{ pagination_query }}&page=1">First</a>
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{{ pagination_query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+    {% endif %}
+    <span class="px-3 py-1.5 text-slate-600">Page {{ page_obj.number }} of {{ paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{{ pagination_query }}&page={{ page_obj.next_page_number }}">Next</a>
+    <a class="px-3 py-1.5 rounded-md border border-slate-300 bg-white" href="?{{ pagination_query }}&page={{ paginator.num_pages }}">Last</a>
+    {% endif %}
+  </div>
+</div>
+{% elif talks %}
+<div class="mt-4 text-sm text-slate-600">Showing {{ talks|length }} talk{{ talks|length|pluralize }}</div>
+{% endif %}
 {% endblock %}

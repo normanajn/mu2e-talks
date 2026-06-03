@@ -1,0 +1,12 @@
+{
+  "talk_title": "Muons are cool - test",
+  "conference_title": "Muon Physics 2027",
+  "conference_start_date": "2027-06-01",
+  "conference_end_date": "2027-06-05",
+  "type": "conference",
+  "status": "active",
+  "docdb_number": "12345",
+  "plenary": true,
+  "assigned_to_email": "speaker@example.edu",
+  "comments": "Created through the API"
+}

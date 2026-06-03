@@ -12,6 +12,7 @@ urlpatterns = [
     path('talks/',  include('apps.talks.urls',  namespace='talks')),
     path('reports/',  include('apps.reports.urls',  namespace='reports')),
     path('audit/',    include('apps.audit.urls',    namespace='audit')),
+    path('api/',      include('apps.api.urls',      namespace='api')),
 ]
 
 if settings.DEBUG:
