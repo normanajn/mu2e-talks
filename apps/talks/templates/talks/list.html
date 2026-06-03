@@ -15,6 +15,9 @@
 </div>
 
 <form method="get" class="mb-4 flex flex-wrap gap-3 items-end">
+  {# Preserve active sort when re-filtering #}
+  <input type="hidden" name="sort" value="{{ sort }}">
+  <input type="hidden" name="dir"  value="{{ sort_dir }}">
   <label class="block">
     <span class="text-xs font-medium text-slate-600">Search</span>
     <input type="search" name="q" value="{{ request.GET.q }}" class="mt-1 rounded-md border-slate-300 text-sm" placeholder="Talk or conference">
@@ -23,14 +26,14 @@
     <span class="text-xs font-medium text-slate-600">Status</span>
     <select name="status" class="mt-1 rounded-md border-slate-300 text-sm">
       <option value="">All</option>
-      <option value="draft" {% if request.GET.status == "draft" %}selected{% endif %}>Draft</option>
+      <option value="draft"  {% if request.GET.status == "draft"  %}selected{% endif %}>Draft</option>
       <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Active</option>
     </select>
   </label>
   <label class="block">
     <span class="text-xs font-medium text-slate-600">Rows</span>
     <select name="per_page" class="mt-1 rounded-md border-slate-300 text-sm">
-      <option value="50" {% if per_page == "50" %}selected{% endif %}>50</option>
+      <option value="50"  {% if per_page == "50"  %}selected{% endif %}>50</option>
       <option value="100" {% if per_page == "100" %}selected{% endif %}>100</option>
       <option value="200" {% if per_page == "200" %}selected{% endif %}>200</option>
       <option value="all" {% if per_page == "all" %}selected{% endif %}>All</option>
@@ -39,29 +42,98 @@
   <button class="bg-slate-900 text-white px-4 py-2 rounded-md text-sm">Filter</button>
 </form>
 
+{# ── Sortable table ──────────────────────────────────────────────────────── #}
+{% with fq=filter_query %}
 <div class="overflow-x-auto bg-white border border-slate-200 rounded-lg">
   <table class="min-w-full divide-y divide-slate-200 text-sm">
     <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
       <tr>
-        <th class="px-4 py-3">Talk</th>
-        <th class="px-4 py-3">Conference</th>
-        <th class="px-4 py-3">Type</th>
-        <th class="px-4 py-3">Assigned</th>
-        <th class="px-4 py-3">Practice</th>
-        <th class="px-4 py-3">Status</th>
+
+        {# ── Talk ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=talk&dir={% if sort == 'talk' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'talk' %}text-slate-700{% endif %}">
+            Talk
+            {% if sort == 'talk' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Date (conference start) ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=date&dir={% if sort == 'date' and sort_dir == 'desc' %}asc{% else %}desc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'date' %}text-slate-700{% endif %}">
+            Date
+            {% if sort == 'date' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Conference ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=conference&dir={% if sort == 'conference' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'conference' %}text-slate-700{% endif %}">
+            Conference
+            {% if sort == 'conference' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Type ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=type&dir={% if sort == 'type' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'type' %}text-slate-700{% endif %}">
+            Type
+            {% if sort == 'type' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Assigned ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=assigned&dir={% if sort == 'assigned' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'assigned' %}text-slate-700{% endif %}">
+            Assigned
+            {% if sort == 'assigned' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Practice ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=practice&dir={% if sort == 'practice' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'practice' %}text-slate-700{% endif %}">
+            Practice
+            {% if sort == 'practice' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
+        {# ── Status ── #}
+        <th class="px-4 py-3">
+          <a href="?{% if fq %}{{ fq }}&{% endif %}sort=status&dir={% if sort == 'status' and sort_dir == 'asc' %}desc{% else %}asc{% endif %}"
+             class="inline-flex items-center gap-1 hover:text-slate-700 {% if sort == 'status' %}text-slate-700{% endif %}">
+            Status
+            {% if sort == 'status' %}{% if sort_dir == 'asc' %}<span>↑</span>{% else %}<span>↓</span>{% endif %}{% endif %}
+          </a>
+        </th>
+
         <th class="px-4 py-3"></th>
       </tr>
     </thead>
     <tbody class="divide-y divide-slate-100">
       {% for talk in talks %}
-      <tr>
-        <td class="px-4 py-3 font-medium text-slate-900">{{ talk.talk_title }}{% if talk.plenary %}<span class="ml-2 text-xs text-mu2e-primary">Plenary</span>{% endif %}{% if talk.parallel %}<span class="ml-2 text-xs text-mu2e-primary">Parallel</span>{% endif %}</td>
-        <td class="px-4 py-3">{{ talk.conference.title|default:"-" }}</td>
+      {# Row attention coloring — skip if talk is already given or conf is in the past #}
+      {% with cs=talk.conference.start_date %}
+      <tr class="{% if talk.complete_given or cs and cs < today %}hover:bg-slate-50{% elif cs and cs <= sixty_days_from_now %}bg-red-50 hover:bg-red-100{% elif not talk.assigned_to %}bg-orange-50 hover:bg-orange-100{% else %}hover:bg-slate-50{% endif %}">
+        <td class="px-4 py-3 font-medium text-slate-900">
+          {{ talk.talk_title }}
+          {% if talk.plenary %}<span class="ml-2 text-xs text-mu2e-primary">Plenary</span>{% endif %}
+          {% if talk.parallel %}<span class="ml-2 text-xs text-mu2e-primary">Parallel</span>{% endif %}
+        </td>
+        <td class="px-4 py-3 whitespace-nowrap text-slate-600">
+          {{ cs|date:"Y-m-d"|default:"—" }}
+        </td>
+        <td class="px-4 py-3">{{ talk.conference.title|default:"—" }}</td>
         <td class="px-4 py-3">{{ talk.get_type_display }}</td>
         <td class="px-4 py-3">{{ talk.assigned_to|default:"Unassigned" }}</td>
-        <td class="px-4 py-3">
-          {{ talk.practice_talk_date|date:"Y-m-d"|default:"-" }}
-          {% if talk.practice_talk_complete %}<span class="ml-1 text-green-700">complete</span>{% endif %}
+        <td class="px-4 py-3 whitespace-nowrap">
+          {{ talk.practice_talk_date|date:"Y-m-d"|default:"—" }}
+          {% if talk.practice_talk_complete %}<span class="ml-1 text-green-700">✓</span>{% endif %}
         </td>
         <td class="px-4 py-3">
           <span class="rounded-full px-2 py-0.5 text-xs font-medium {% if talk.status == 'active' %}bg-green-50 text-green-700{% else %}bg-amber-50 text-amber-700{% endif %}">
@@ -72,12 +144,14 @@
           <a class="text-mu2e-primary hover:underline" href="{% url 'talks:detail' talk.pk %}">Open</a>
         </td>
       </tr>
+      {% endwith %}
       {% empty %}
-      <tr><td colspan="7" class="px-4 py-8 text-center text-slate-500">No talks found.</td></tr>
+      <tr><td colspan="8" class="px-4 py-8 text-center text-slate-500">No talks found.</td></tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
+{% endwith %}
 
 {% if is_paginated %}
 <div class="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm">

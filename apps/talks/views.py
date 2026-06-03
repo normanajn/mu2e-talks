@@ -19,12 +19,32 @@ def _can_edit(user, talk):
     return user.can_manage_talks or talk.assigned_to_id == user.id
 
 
+_SORT_FIELDS = {
+    'talk':       'talk_title',
+    'date':       'conference__start_date',
+    'conference': 'conference__title',
+    'type':       'type',
+    'assigned':   'assigned_to__display_name',
+    'practice':   'practice_talk_date',
+    'status':     'status',
+}
+
+
 class TalkListView(LoginRequiredMixin, ListView):
     model = Talk
     template_name = 'talks/list.html'
     context_object_name = 'talks'
     paginate_by = 50
     page_size_options = ('50', '100', '200', 'all')
+
+    def _sort_params(self):
+        sort_key = self.request.GET.get('sort', 'date').strip()
+        sort_dir = self.request.GET.get('dir', 'desc').strip()
+        if sort_key not in _SORT_FIELDS:
+            sort_key = 'date'
+        if sort_dir not in ('asc', 'desc'):
+            sort_dir = 'desc'
+        return sort_key, sort_dir
 
     def get_paginate_by(self, queryset):
         per_page = self.request.GET.get('per_page', '50').strip().lower()
@@ -45,18 +65,36 @@ class TalkListView(LoginRequiredMixin, ListView):
         status = self.request.GET.get('status', '').strip()
         if status in Talk.Status.values:
             qs = qs.filter(status=status)
-        return qs
+        sort_key, sort_dir = self._sort_params()
+        field = _SORT_FIELDS[sort_key]
+        order = f'-{field}' if sort_dir == 'desc' else field
+        return qs.order_by(order, 'talk_title', 'pk')
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
         per_page = self.request.GET.get('per_page', '50').strip().lower()
         if per_page not in self.page_size_options:
             per_page = '50'
-        query_params = self.request.GET.copy()
-        query_params.pop('page', None)
+        sort_key, sort_dir = self._sort_params()
+        # filter_query: all params except sort/dir/page — used to build column sort links
+        filter_params = self.request.GET.copy()
+        for k in ('sort', 'dir', 'page'):
+            filter_params.pop(k, None)
+        filter_query = filter_params.urlencode()
+        # pagination_query: all params except page — preserves active sort
+        pagination_params = self.request.GET.copy()
+        pagination_params.pop('page', None)
         ctx['per_page'] = per_page
         ctx['page_size_options'] = self.page_size_options
-        ctx['pagination_query'] = query_params.urlencode()
+        ctx['pagination_query'] = pagination_params.urlencode()
+        from datetime import timedelta
+        from django.utils import timezone
+        today = timezone.localdate()
+        ctx['sort'] = sort_key
+        ctx['sort_dir'] = sort_dir
+        ctx['filter_query'] = filter_query
+        ctx['today'] = today
+        ctx['sixty_days_from_now'] = today + timedelta(days=60)
         return ctx
 
 
