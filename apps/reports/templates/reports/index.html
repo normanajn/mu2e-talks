@@ -120,9 +120,11 @@
         <div>
           <label class="block text-xs font-semibold text-slate-600 mb-1">User template</label>
           <p class="text-xs text-slate-400 mb-1">
-            The message sent with each request.
-            Use <code class="bg-slate-100 px-1 rounded">{talks}</code> where talk data is inserted.
-            Use <code class="bg-slate-100 px-1 rounded">{query}</code> where the user's question is inserted.
+            The message sent with each request. Supported placeholders:
+            <code class="bg-slate-100 px-1 rounded">{talks}</code> filtered talk data (required),
+            <code class="bg-slate-100 px-1 rounded">{query}</code> user question,
+            <code class="bg-slate-100 px-1 rounded">{institutions}</code> full institution list,
+            <code class="bg-slate-100 px-1 rounded">{users}</code> full member list.
           </p>
           <textarea name="user_template" rows="10"
                     class="w-full rounded-md border border-slate-300 px-3 py-2 text-xs font-mono shadow-sm

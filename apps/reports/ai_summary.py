@@ -6,6 +6,57 @@ from django.conf import settings
 from .exporters import _rows
 
 
+def _format_institutions() -> str:
+    from apps.accounts.models import Institution
+    parts = []
+    for inst in Institution.objects.filter(is_active=True).order_by('sort_order', 'name'):
+        meta = []
+        if inst.collaboration_number:
+            meta.append(f'#{inst.collaboration_number}')
+        if inst.collaboration_code:
+            meta.append(f'code={inst.collaboration_code}')
+        if inst.url:
+            meta.append(inst.url)
+        suffix = f'  ({", ".join(meta)})' if meta else ''
+        parts.append(f'- {inst.name}{suffix}')
+    return '\n'.join(parts) if parts else '(no institutions)'
+
+
+def _format_users() -> str:
+    from apps.accounts.models import User
+    parts = []
+    qs = (
+        User.objects
+        .filter(is_active=True)
+        .select_related('institution', 'group')
+        .order_by('display_name', 'email')
+    )
+    for u in qs:
+        name = u.display_name or u.email or u.username
+        meta = []
+        if u.institution:
+            meta.append(u.institution.name)
+        if u.collaboration_position:
+            meta.append(u.get_collaboration_position_display())
+        if u.collaboration_member_number:
+            meta.append(f'member#{u.collaboration_member_number}')
+        if u.fnal_username:
+            meta.append(f'fnal={u.fnal_username}')
+        if u.inspire_id:
+            meta.append(f'INSPIRE={u.inspire_id}')
+        if u.orcid:
+            meta.append(f'ORCID={u.orcid}')
+        flags = []
+        if u.is_collaboration_member:
+            flags.append('MEMBER')
+        if u.role != 'user':
+            flags.append(u.get_role_display().upper())
+        flag_str = f'  [{", ".join(flags)}]' if flags else ''
+        suffix = f'  ({", ".join(meta)})' if meta else ''
+        parts.append(f'- {name}{flag_str}{suffix}')
+    return '\n'.join(parts) if parts else '(no users)'
+
+
 def _format_talks(qs) -> str:
     parts = []
     for r in _rows(qs):
@@ -61,13 +112,14 @@ def generate(qs, query: str = '', user=None) -> str:
     base_url = getattr(settings, 'ANTHROPIC_BASE_URL', '') or None
     client = anthropic.Anthropic(api_key=api_key, **({"base_url": base_url} if base_url else {}))
 
-    talks_text = _format_talks(qs)
     effective_query = query.strip() or DEFAULT_QUERY
-
-    try:
-        content = config.user_template.format(talks=talks_text, query=effective_query)
-    except KeyError:
-        content = config.user_template.format(talks=talks_text)
+    placeholders = {
+        'query': effective_query,
+        'talks': _format_talks(qs),
+        'institutions': _format_institutions(),
+        'users': _format_users(),
+    }
+    content = config.user_template.format_map(placeholders)
 
     message = client.messages.create(
         model=model,

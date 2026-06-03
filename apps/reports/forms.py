@@ -17,20 +17,26 @@ class AIPromptConfigForm(forms.ModelForm):
         }
         help_texts = {
             'user_template': (
-                'Use {talks} where talk data is inserted. '
-                'Use {query} where the user query is inserted.'
+                'Supported placeholders: '
+                '{talks} — filtered talk data, '
+                '{query} — user question, '
+                '{institutions} — full institution list, '
+                '{users} — full member list.'
             ),
         }
+
+    _KNOWN_PLACEHOLDERS = {'talks', 'query', 'institutions', 'users'}
 
     def clean_user_template(self):
         template = self.cleaned_data.get('user_template', '')
         if '{talks}' not in template:
             raise forms.ValidationError('The template must contain {talks} as a placeholder.')
         try:
-            template.format(talks='', query='')
+            template.format_map({k: '' for k in self._KNOWN_PLACEHOLDERS})
         except KeyError as exc:
+            known = ', '.join(f'{{{k}}}' for k in sorted(self._KNOWN_PLACEHOLDERS))
             raise forms.ValidationError(
-                f'Unknown placeholder {{{exc.args[0]}}} — only {{talks}} and {{query}} are supported.'
+                f'Unknown placeholder {{{exc.args[0]}}} — supported: {known}.'
             ) from exc
         except ValueError as exc:
             raise forms.ValidationError(f'Invalid template syntax: {exc}') from exc

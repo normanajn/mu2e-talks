@@ -11,9 +11,21 @@ DEFAULT_SYSTEM = (
 DEFAULT_USER_TMPL = """\
 {query}
 
-Below is the Mu2e talks data matching the selected filters:
+## Talks (filtered selection)
 
 {talks}
+
+---
+
+## Mu2e Collaboration Institutions
+
+{institutions}
+
+---
+
+## Mu2e Collaboration Members
+
+{users}
 """
 
 DEFAULT_QUERY = (
