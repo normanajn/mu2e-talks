@@ -3,7 +3,10 @@
 {% block content %}
 <div class="mb-6 flex items-center justify-between gap-4">
   <h1 class="text-2xl font-semibold text-slate-900">Conferences</h1>
-  <a href="{% url 'talks:conference-create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Conference</a>
+  <div class="flex gap-2">
+    <a href="{% url 'talks:conference-import' %}" class="px-4 py-2 rounded-md text-sm border border-slate-300">Import CSV</a>
+    <a href="{% url 'talks:conference-create' %}" class="bg-mu2e-primary hover:bg-mu2e-primary-hover text-white px-4 py-2 rounded-md text-sm font-medium">New Conference</a>
+  </div>
 </div>
 
 <form method="get" class="mb-4 flex flex-wrap items-end gap-3">

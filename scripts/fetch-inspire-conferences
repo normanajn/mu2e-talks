@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+"""
+Fetch upcoming conferences from INSPIRE-HEP and write a CSV that can be
+imported directly into Mu2eTalks via the Conferences → Import CSV page.
+
+CSV columns produced:
+  inspire_id, title, start_date, end_date, url
+
+Usage:
+  ./scripts/fetch-inspire-conferences [OPTIONS]
+
+Options:
+  --start-date DATE   "upcoming" (default), or YYYY-MM-DD
+  --end-date   DATE   Upper bound YYYY-MM-DD (combined with --start-date as a range)
+  --keywords   WORDS  Free-text INSPIRE search query, e.g. "muon" or "dark matter"
+  --size       N      Results per API page, max 25 (default 25)
+  --pages      N      Maximum pages to fetch; 0 = all (default 0)
+  --sort       KEY    dateasc|datedesc|titleasc|titledesc (default dateasc)
+  -o / --output FILE  Write CSV to FILE instead of stdout
+  -h / --help         Show this help message
+"""
+
+import argparse
+import csv
+import json
+import math
+import sys
+import time
+import urllib.error
+import urllib.parse
+import urllib.request
+
+API_BASE = 'https://inspirehep.net/api/conferences'
+MAX_PAGE_SIZE = 25
+_FIELDS = 'titles,opening_date,closing_date,urls,acronyms'
+
+
+def _fetch(url: str) -> dict:
+    req = urllib.request.Request(url, headers={'Accept': 'application/json',
+                                               'User-Agent': 'mu2e-talks/1.0'})
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                return json.loads(resp.read())
+        except urllib.error.HTTPError as exc:
+            if exc.code == 429 and attempt < 2:
+                wait = 2 ** (attempt + 1)
+                print(f'  Rate-limited; retrying in {wait}s…', file=sys.stderr)
+                time.sleep(wait)
+                continue
+            raise
+
+
+def fetch_conferences(start_date='upcoming', end_date='', keywords='',
+                      size=25, max_pages=0, sort='dateasc'):
+    size = min(max(1, size), MAX_PAGE_SIZE)
+    params = {'sort': sort, 'size': str(size), 'fields': _FIELDS}
+
+    if start_date == 'upcoming':
+        params['start_date'] = 'upcoming'
+    elif start_date and end_date:
+        params['start_date'] = f'{start_date}--{end_date}'
+    elif start_date:
+        params['start_date'] = start_date
+
+    if keywords:
+        params['q'] = keywords
+
+    results = []
+    page = 1
+    while True:
+        params['page'] = str(page)
+        url = f'{API_BASE}?{urllib.parse.urlencode(params)}'
+        print(f'  Fetching page {page}: {url}', file=sys.stderr)
+        data = _fetch(url)
+        hits = data.get('hits', {})
+        total = hits.get('total', 0)
+        records = hits.get('hits', [])
+        if not records:
+            break
+        results.extend(records)
+        total_pages = max(1, math.ceil(total / size))
+        if max_pages and page >= max_pages:
+            break
+        if page >= total_pages:
+            break
+        page += 1
+        time.sleep(0.5)
+
+    return results
+
+
+def _row(record: dict) -> dict | None:
+    meta = record.get('metadata', {})
+    inspire_id = str(record.get('id', '')).strip()
+    titles = meta.get('titles', [])
+    title = titles[0].get('title', '').strip() if titles else ''
+    if not inspire_id or not title:
+        return None
+    acronyms = meta.get('acronyms', [])
+    if acronyms:
+        title = f'{acronyms[0]}: {title}'
+    urls = meta.get('urls', [])
+    return {
+        'inspire_id': inspire_id,
+        'title':      title,
+        'start_date': meta.get('opening_date', '').strip(),
+        'end_date':   meta.get('closing_date', '').strip(),
+        'url':        urls[0].get('value', '').strip() if urls else '',
+    }
+
+
+def write_csv(records, out) -> int:
+    fields = ['inspire_id', 'title', 'start_date', 'end_date', 'url']
+    writer = csv.DictWriter(out, fieldnames=fields, lineterminator='\n')
+    writer.writeheader()
+    count = 0
+    for r in records:
+        row = _row(r)
+        if row:
+            writer.writerow(row)
+            count += 1
+    return count
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description='Fetch INSPIRE-HEP conferences and write a Mu2eTalks-compatible CSV.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+    )
+    parser.add_argument(
+        '--start-date', default='upcoming',
+        help='"upcoming", or YYYY-MM-DD lower bound',
+    )
+    parser.add_argument(
+        '--end-date', default='',
+        help='YYYY-MM-DD upper bound (use with --start-date for a date range)',
+    )
+    parser.add_argument(
+        '--keywords', '-k', default='',
+        help='INSPIRE full-text search query, e.g. "muon collider"',
+    )
+    parser.add_argument(
+        '--size', type=int, default=25,
+        help='Results per API page (1–25)',
+    )
+    parser.add_argument(
+        '--pages', type=int, default=0,
+        help='Maximum pages to fetch; 0 fetches all pages',
+    )
+    parser.add_argument(
+        '--sort', default='dateasc',
+        choices=['dateasc', 'datedesc', 'titleasc', 'titledesc'],
+        help='Sort order returned by INSPIRE',
+    )
+    parser.add_argument(
+        '--output', '-o', default='',
+        help='Write CSV to this file (default: stdout)',
+    )
+    args = parser.parse_args()
+
+    print('Fetching conferences from INSPIRE-HEP…', file=sys.stderr)
+    records = fetch_conferences(
+        start_date=args.start_date,
+        end_date=args.end_date,
+        keywords=args.keywords,
+        size=args.size,
+        max_pages=args.pages,
+        sort=args.sort,
+    )
+    print(f'  Retrieved {len(records)} records.', file=sys.stderr)
+
+    if args.output:
+        with open(args.output, 'w', newline='', encoding='utf-8') as fh:
+            count = write_csv(records, fh)
+        print(f'Wrote {count} conferences to {args.output}', file=sys.stderr)
+    else:
+        count = write_csv(records, sys.stdout)
+        print(f'Wrote {count} conferences.', file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()

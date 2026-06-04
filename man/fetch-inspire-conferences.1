@@ -1,0 +1,104 @@
+.TH FETCH-INSPIRE-CONFERENCES 1 "2026-06-04" "Mu2eTalks" "Mu2eTalks Scripts"
+.SH NAME
+fetch-inspire-conferences \- fetch upcoming conferences from INSPIRE-HEP and write a Mu2eTalks-compatible CSV
+.SH SYNOPSIS
+.B fetch-inspire-conferences
+[\fB\-\-start\-date\fR \fIDATE\fR]
+[\fB\-\-end\-date\fR \fIDATE\fR]
+[\fB\-\-keywords\fR \fIWORDS\fR]
+[\fB\-\-size\fR \fIN\fR]
+[\fB\-\-pages\fR \fIN\fR]
+[\fB\-\-sort\fR \fIKEY\fR]
+[\fB\-o\fR \fIFILE\fR]
+.SH DESCRIPTION
+Queries the INSPIRE-HEP REST API for conferences matching the given filters
+and writes a UTF-8 CSV file with columns:
+.PP
+.RS
+.B inspire_id, title, start_date, end_date, url
+.RE
+.PP
+This CSV can be imported directly into Mu2eTalks via the
+Conferences \(-> Import CSV page, or with the Django management shell.
+Existing conferences with a matching \fBinspire_id\fR are updated; new ones
+are created.
+.PP
+If a conference record includes acronyms (e.g. DPF2026), the first acronym
+is prepended to the title: \fIDPF2026: Particles and Fields Meeting\fR.
+.SH OPTIONS
+.TP
+.BI \-\-start\-date " DATE"
+Filter by conference start date.
+.br
+Use \fBupcoming\fR (default) for all future conferences, or a date in
+\fBYYYY-MM-DD\fR format as a lower bound.
+.TP
+.BI \-\-end\-date " DATE"
+Upper date bound in \fBYYYY-MM-DD\fR format.
+When combined with \fB\-\-start\-date\fR, the API is queried for conferences
+starting within that range.
+.TP
+.BI \-\-keywords " WORDS"
+Free-text INSPIRE search query, e.g. \fBmuon\fR or \fB"dark matter"\fR.
+.TP
+.BI \-\-size " N"
+Number of results per API page (1\(en25, default 25).
+.TP
+.BI \-\-pages " N"
+Maximum number of pages to fetch.
+0 (default) fetches all available pages.
+.TP
+.BI \-\-sort " KEY"
+Sort order: \fBdateasc\fR (default), \fBdatedesc\fR, \fBtitleasc\fR,
+\fBtitledesc\fR.
+.TP
+.BR \-o ", " \-\-output " " \fIFILE\fR
+Write the CSV to \fIFILE\fR instead of standard output.
+.TP
+.BR \-h ", " \-\-help
+Show usage and exit.
+.SH EXAMPLES
+Fetch all upcoming conferences and print to stdout:
+.PP
+.RS
+.B ./scripts/fetch-inspire-conferences
+.RE
+.PP
+Fetch four pages of upcoming conferences and save to a file:
+.PP
+.RS
+.B ./scripts/fetch-inspire-conferences --pages 4 -o conferences.csv
+.RE
+.PP
+Fetch conferences from a specific date range:
+.PP
+.RS
+.B ./scripts/fetch-inspire-conferences --start-date 2026-06-01 --end-date 2026-12-31 -o h2-2026.csv
+.RE
+.PP
+Search for muon-related conferences:
+.PP
+.RS
+.B ./scripts/fetch-inspire-conferences --keywords muon --pages 2 -o muon-conferences.csv
+.RE
+.SH OUTPUT FORMAT
+.TS
+l l.
+Column	Description
+inspire_id	Numeric INSPIRE-HEP conference identifier
+title	Conference title, optionally prefixed with the first acronym
+start_date	Opening date (YYYY-MM-DD), may be blank
+end_date	Closing date (YYYY-MM-DD), may be blank
+url	Primary conference URL, may be blank
+.TE
+.SH NOTES
+The INSPIRE-HEP API is rate-limited.
+The script waits 0.5 seconds between pages and retries up to three times
+on HTTP 429 responses.
+.PP
+The script requires no external dependencies beyond the Python standard
+library and can be run without activating the project virtual environment.
+.SH SEE ALSO
+.BR bootstrap (1)
+.SH AUTHORS
+Mu2eTalks project contributors.

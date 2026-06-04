@@ -10,7 +10,8 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 from apps.accounts.permissions import TalkDeleteRequiredMixin, TalkManagerRequiredMixin
 from apps.core.markdown import render_markdown
 
-from .forms import ConferenceForm, TalkForm, TalkSpreadsheetImportForm
+from .conference_import import ConferenceImportError, import_conferences
+from .forms import ConferenceForm, ConferenceImportForm, TalkForm, TalkSpreadsheetImportForm
 from .models import Conference, Talk
 from .spreadsheet_import import TalkSpreadsheetImportError, import_talk_records, records_from_json, workbook_to_records
 
@@ -264,6 +265,28 @@ class TalkSpreadsheetImportView(TalkManagerRequiredMixin, View):
             f'{counts["unmatched_institutions"]} institutions unmatched.',
         )
         return redirect('talks:spreadsheet-import')
+
+
+class ConferenceImportView(TalkManagerRequiredMixin, View):
+    template_name = 'talks/import_conferences.html'
+
+    def get(self, request):
+        return render(request, self.template_name, {'form': ConferenceImportForm()})
+
+    def post(self, request):
+        form = ConferenceImportForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, self.template_name, {'form': form})
+        try:
+            created, updated = import_conferences(form.cleaned_data['csv_file'])
+        except ConferenceImportError as exc:
+            form.add_error('csv_file', str(exc))
+            return render(request, self.template_name, {'form': form})
+        messages.success(
+            request,
+            f'Conference import complete: {created} created, {updated} updated.',
+        )
+        return redirect('talks:conferences')
 
 
 class ConferenceCreateView(TalkManagerRequiredMixin, CreateView):

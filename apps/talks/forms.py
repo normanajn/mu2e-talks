@@ -10,6 +10,13 @@ class TalkSpreadsheetImportForm(forms.Form):
     )
 
 
+class ConferenceImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label='Conference CSV',
+        help_text='CSV with columns: inspire_id, title, start_date, end_date, url',
+    )
+
+
 class ConferenceForm(forms.ModelForm):
     class Meta:
         model = Conference

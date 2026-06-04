@@ -9,6 +9,7 @@ urlpatterns = [
     path('new/', views.TalkCreateView.as_view(), name='create'),
     path('import-spreadsheet/', views.TalkSpreadsheetImportView.as_view(), name='spreadsheet-import'),
     path('conferences/', views.ConferenceListView.as_view(), name='conferences'),
+    path('conferences/import/', views.ConferenceImportView.as_view(), name='conference-import'),
     path('conferences/new/', views.ConferenceCreateView.as_view(), name='conference-create'),
     path('conferences/<int:pk>/edit/', views.ConferenceUpdateView.as_view(), name='conference-edit'),
     path('conferences/<int:pk>/delete/', views.ConferenceDeleteView.as_view(), name='conference-delete'),
